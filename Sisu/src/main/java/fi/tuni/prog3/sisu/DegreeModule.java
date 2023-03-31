@@ -20,8 +20,7 @@ public abstract class DegreeModule {
      * @param groupId group id of the Module or Course.
      * @param minCredits minimum credits of the Module or Course.
      */
-    public DegreeModule(String name, String id, String groupId, 
-            int minCredits) {
+    public DegreeModule(String name, String id, String groupId, int minCredits) {
         
         this.name = name;
         this.id = id;

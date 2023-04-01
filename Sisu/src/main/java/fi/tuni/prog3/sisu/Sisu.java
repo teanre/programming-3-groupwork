@@ -6,18 +6,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -70,45 +67,47 @@ public class Sisu extends Application {
         var degreeProgrammes = new getDegreeProgrammes();
         var degreeProgrammesData = degreeProgrammes.getData();
         
-        TableView<DegreeModule> tableView = new TableView<>();
-
-        // Create a TableColumn for each property of the objects in the ArrayList
-        TableColumn<DegreeModule, String> nameColumn = new TableColumn<>("name");
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        TableColumn<DegreeModule, String> idColumn = new TableColumn<>("id");
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        TableColumn<DegreeModule, String> groupColumn = new TableColumn<>("groupId");
-        groupColumn.setCellValueFactory(new PropertyValueFactory<>("groupId"));
-        TableColumn<DegreeModule, String> creditsColumn = new TableColumn<>("minCredits");
-        creditsColumn.setCellValueFactory(new PropertyValueFactory<>("minCredits"));
-
-        // Add the TableColumns to the TableView
-        tableView.getColumns().add(nameColumn);
-        tableView.getColumns().add(idColumn);
-        tableView.getColumns().add(groupColumn);
-        tableView.getColumns().add(creditsColumn);
-
-        // Create an ObservableList from the ArrayList
-        ObservableList<DegreeModule> degreeNames = FXCollections.observableArrayList();
-        ObservableList<DegreeModule> degreeIds = FXCollections.observableArrayList();
-        ObservableList<DegreeModule> degreeGroups = FXCollections.observableArrayList();
-        ObservableList<DegreeModule> degreeCredits = FXCollections.observableArrayList();
+        ChoiceBox<String> choiceBox = new ChoiceBox<>();
         
         for (DegreeModule degreeProgramme : degreeProgrammesData) {
-            degreeNames.add(degreeProgramme);
-            degreeIds.add(degreeProgramme);
-            degreeGroups.add(degreeProgramme);
-            degreeCredits.add(degreeProgramme);
+            choiceBox.getItems().add(degreeProgramme.getName());
         }
 
-        // Set the items of the TableView to the ObservableList
-        tableView.setItems(degreeNames);
-        tableView.setItems(degreeIds);
-        tableView.setItems(degreeGroups);
-        tableView.setItems(degreeCredits);
+        Button selectBtn = new Button();
+        selectBtn.setText("Select");
+        // Triggering event after choice
+        selectBtn.setOnAction((ActionEvent event) -> {
+            String chosen = choiceBox.getValue().strip();
+            System.out.println("Selected: " + choiceBox.getValue().strip());
+            // find the selected object and call for its degreetree
+            for(DegreeModule d : degreeProgrammesData) {
+                if(d.getName().equals(chosen)) {
+                    var studyTree = new getStudyTree(d);
+                    System.out.println(studyTree.getA());
+                    break;
+                }
+            }
+        });
         
+        // Disabling select button if a degreeprogramme is not chosen
+        selectBtn.setDisable(true);
+        choiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue.trim().isEmpty()) {
+                selectBtn.setDisable(true);
+            } else {
+                selectBtn.setDisable(false);
+            }     
+        });
+        
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(25, 25, 25, 25));
+        grid.add(choiceBox, 0, 0);
+        grid.add(selectBtn, 0, 1);
         //Creating a VBox for the left side.
-        VBox leftVBox = new VBox(tableView);
+        VBox leftVBox = new VBox(grid);
         leftVBox.setPrefWidth(380);
 
         return leftVBox;
@@ -119,15 +118,19 @@ public class Sisu extends Application {
         try (FileReader reader = new FileReader("studentInfo.json")) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             Student info = gson.fromJson(reader, Student.class);
+            
             Label label = new Label("Username: " + info.getName() + "\n" +
-                            "Password: " + info.getStudentNumber() + "\n" +
-                    "Starting year " + info.getStartingYear());
+                            "Student: " + info.getStudentNumber() + "\n" +
+                    "Starting year: " + info.getStartingYear());
+            
             label.setAlignment(Pos.CENTER);
             label.setPadding(new Insets(10));
+            
             StackPane userInfo = new StackPane(label);
             VBox rightVBox = new VBox(userInfo);
             rightVBox.setPrefWidth(380);
             return rightVBox;
+            
         } catch (IOException e) {
             System.out.println(e);
         }

@@ -82,7 +82,8 @@ public class Sisu extends Application {
             // find the selected object and call for its degreetree
             for(DegreeModule d : degreeProgrammesData) {
                 if(d.getName().equals(chosen)) {
-                    var studyTree = new getStudyTree(d);
+                    var studyTree = new getStudyTree(d.getName());
+                    studyTree.getStudyTreeOf(d.getGroupId());
                     System.out.println(studyTree.getA());
                     break;
                 }

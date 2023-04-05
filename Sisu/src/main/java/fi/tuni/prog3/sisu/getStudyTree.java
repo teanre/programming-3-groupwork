@@ -29,7 +29,7 @@ public class getStudyTree {
         moduleName = name;
     }
     
-    public void getStudyTreeOf(String program) {
+    /*public void getStudyTreeOf(String program) {
         try {
         Gson gson = new Gson();
         String res;
@@ -56,11 +56,104 @@ public class getStudyTree {
         }
         } catch (JsonSyntaxException e) {
             System.out.println(e);
-        }
-        
+        }       
+    }*/
+    
+    public void getStudyTreeOf(String program) {
+        try {
+            JsonObject res;
+            res = doGroupIdRequest(program, "Module");
+            String name = res.get("name").getAsJsonObject().get("fi").getAsString();
+            System.out.println(name);
+            traverseStudyTree(res);
+        } catch (JsonSyntaxException e) {
+            System.out.println(e);
+        }        
     }
     
-    public static String doGroupIdRequest(String groupId, String type) {
+    public void processCourseJson(JsonObject courseObject) {
+        String name;
+        JsonObject nameObj = courseObject.get("name").getAsJsonObject();
+        if (nameObj.has("fi")) {
+            name = nameObj.get("fi").getAsString();
+        } else {
+            name = nameObj.get("en").getAsString();
+        }       
+        System.out.println("course: " + name);
+    }
+        
+    public JsonArray processJson(JsonObject jsonObject) {
+        JsonArray finalArray = null;
+
+        //if the original obj has rule, then dig deeper in the json
+        if (jsonObject.has("rule")) {
+            JsonObject ruleObject = jsonObject.get("rule").getAsJsonObject();  
+            if (ruleObject.has("rule")) {    
+                JsonObject innerRule = ruleObject.getAsJsonObject("rule"); 
+                JsonArray ruleArray = innerRule.getAsJsonArray("rules"); 
+                for (JsonElement jsonEl : ruleArray) {
+                    JsonObject jsonObj = jsonEl.getAsJsonObject();
+                    if (jsonObj.has("rules")) {
+                         finalArray = jsonObj.getAsJsonArray("rules");                    
+                    } else {
+                        finalArray = ruleArray;
+                    }
+                }
+            } else {
+                 finalArray = ruleObject.getAsJsonArray("rules");
+            }
+        } else {
+            finalArray = jsonObject.getAsJsonArray("rules");
+        }
+
+        return finalArray;
+    }
+    
+    public void traverseStudyTree(JsonObject json) {       
+        ArrayList<String> ids = new ArrayList<>();
+        JsonObject res; 
+        String name;
+        String groupId;
+        String type = json.get("type").getAsString();
+        JsonArray jsonArray = null;
+        
+        //these are optional courses/modules, not implemented yet
+        if (type.equals("AnyCourseUnitRule") || type.equals("AnyModuleRule") ) {
+            System.out.println("course/mod: Vapaasti valittavat kurssit/moduulit");
+        } else if (type.equals("CourseUnitRule")) {
+            groupId = json.get("courseUnitGroupId").getAsString();
+            ids.add(groupId);
+
+            res = doGroupIdRequest(groupId, "Course");
+            processCourseJson(res);
+
+        } else { 
+            if (type.equals("ModuleRule")) {
+                groupId = json.get("moduleGroupId").getAsString();
+                ids.add(groupId);
+
+                res = doGroupIdRequest(groupId, "Module");
+                String name2 = res.get("name").getAsJsonObject().get("fi").getAsString();
+                System.out.println("mod: " + name2);
+                jsonArray = processJson(res);
+           } else {
+                jsonArray = processJson(json);
+            }
+
+            for(JsonElement el : jsonArray) {
+                if (el.isJsonObject()) {
+                    JsonObject obj = el.getAsJsonObject();                   
+                    //skip AnyModuleRules at this point, they would be optional modules
+                    if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
+                        traverseStudyTree(obj);
+                    }
+                }
+            }        
+        }       
+    }
+   
+    
+    public static JsonObject doGroupIdRequest(String groupId, String type) {
         try {
         URL url;
         // Set the request
@@ -80,8 +173,16 @@ public class getStudyTree {
             response.append(inputLine);
         }
         in.close();
-        String req = response.toString();
-        return req;
+        /*String req = response.toString();
+        return req;*/
+        
+        //return a jsonObject
+        JsonElement jsonElement = JsonParser.parseString(response.toString());
+        if (jsonElement.isJsonObject()) {
+            return jsonElement.getAsJsonObject();
+        } else if (jsonElement.isJsonArray()) {
+            return jsonElement.getAsJsonArray().get(0).getAsJsonObject();
+        }
 
         } catch (IOException e) {
             System.out.println("Exception occurred: " + e.getMessage());

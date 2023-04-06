@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 public class getStudyTree {
     
     String moduleName;
+    //if a degree has orientation options, stores them <OrientationName, GroupId>
+    private HashMap<String, String> orientations = new HashMap<>();
     private ArrayList<String> a = new ArrayList<>();
     
     public getStudyTree(String name) {
@@ -58,6 +61,24 @@ public class getStudyTree {
             System.out.println(e);
         }       
     }*/
+    public void findOrientations(JsonArray orientationOptions) {
+        String modName;
+        for (JsonElement el : orientationOptions) {
+            //gots to gets from api right, jokanen el kerrallaa
+            String groupId = el.getAsJsonObject().get("moduleGroupId").getAsString();
+
+            JsonObject res = doGroupIdRequest(groupId, "Module");
+            JsonObject nameObj = res.getAsJsonObject("name");
+            if (nameObj.has("fi")) {
+                    modName = nameObj.get("fi").getAsString();
+            } else {
+                    modName = nameObj.get("en").getAsString();
+            }              
+                
+            orientations.put(modName, groupId);
+            System.out.println("Orientationmod: " + modName);
+        }
+    }
     
     public void getStudyTreeOf(String program) {
         try {
@@ -71,6 +92,18 @@ public class getStudyTree {
                 programmeName = nameObj.get("en").getAsString();
             }
             
+            // check if the programme has orientation options, first rule object is decisive
+            JsonObject firstRuleObj = res.getAsJsonObject("rule");
+            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
+                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
+                findOrientations(orientationsArr);
+                
+                //!!!implement user choosing an orientation here, and get from orientationsmap the id
+                
+                //then with it's id get the right jsonobj to traverse
+                //res = doGroupIdRequest(program, "Module");
+            }
+                       
             System.out.println(programmeName);
             traverseStudyTree(res);
         } catch (JsonSyntaxException e) {
@@ -120,7 +153,6 @@ public class getStudyTree {
         ArrayList<String> ids = new ArrayList<>();
         
         JsonObject res; 
-        //String name;
         String groupId;
         String modName;
         String type = json.get("type").getAsString();
@@ -162,7 +194,7 @@ public class getStudyTree {
                         JsonObject obj = el.getAsJsonObject();                   
                         //skip AnyModuleRules at this point, they would be optional modules
                         if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
-                        traverseStudyTree(obj);
+                            traverseStudyTree(obj);
                         }
                     }
                 }  
@@ -211,5 +243,9 @@ public class getStudyTree {
     
     public String getA() {
         return this.a.toString();
+    }
+    
+    public HashMap<String, String> getOrientations() {
+        return this.orientations;
     }
 }

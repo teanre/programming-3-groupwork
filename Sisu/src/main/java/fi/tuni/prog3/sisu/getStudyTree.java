@@ -63,8 +63,15 @@ public class getStudyTree {
         try {
             JsonObject res;
             res = doGroupIdRequest(program, "Module");
-            String name = res.get("name").getAsJsonObject().get("fi").getAsString();
-            System.out.println(name);
+            String programmeName;
+            JsonObject nameObj = res.getAsJsonObject("name");
+            if (nameObj.has("fi")) {
+                programmeName = nameObj.get("fi").getAsString();
+            } else {
+                programmeName = nameObj.get("en").getAsString();
+            }
+            
+            System.out.println(programmeName);
             traverseStudyTree(res);
         } catch (JsonSyntaxException e) {
             System.out.println(e);
@@ -111,9 +118,11 @@ public class getStudyTree {
     
     public void traverseStudyTree(JsonObject json) {       
         ArrayList<String> ids = new ArrayList<>();
+        
         JsonObject res; 
-        String name;
+        //String name;
         String groupId;
+        String modName;
         String type = json.get("type").getAsString();
         JsonArray jsonArray = null;
         
@@ -133,22 +142,32 @@ public class getStudyTree {
                 ids.add(groupId);
 
                 res = doGroupIdRequest(groupId, "Module");
-                String name2 = res.get("name").getAsJsonObject().get("fi").getAsString();
-                System.out.println("mod: " + name2);
+                JsonObject nameObj = res.getAsJsonObject("name");
+                if (nameObj.has("fi")) {
+                    modName = nameObj.get("fi").getAsString();
+                } else {
+                    modName = nameObj.get("en").getAsString();
+                }              
+                
+                System.out.println("mod: " + modName);
                 jsonArray = processJson(res);
            } else {
                 jsonArray = processJson(json);
             }
-
-            for(JsonElement el : jsonArray) {
-                if (el.isJsonObject()) {
-                    JsonObject obj = el.getAsJsonObject();                   
-                    //skip AnyModuleRules at this point, they would be optional modules
-                    if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
+            
+            // note for later: if jsonArray is null, is freely selectable studies
+            if (jsonArray != null) {
+               for(JsonElement el : jsonArray) {
+                    if (el.isJsonObject()) {
+                        JsonObject obj = el.getAsJsonObject();                   
+                        //skip AnyModuleRules at this point, they would be optional modules
+                        if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
                         traverseStudyTree(obj);
+                        }
                     }
-                }
-            }        
+                }  
+            }
+                   
         }       
     }
    

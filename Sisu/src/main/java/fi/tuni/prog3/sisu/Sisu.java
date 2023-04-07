@@ -13,11 +13,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 
@@ -28,7 +36,12 @@ public class Sisu extends Application {
 
     @Override
     public void start(Stage stage) {
-          
+        
+        //Creating a new TabPane and TreeView
+        TabPane tabPane = new TabPane();
+        TreeView treeView = new TreeView();
+        VBox vbox = new VBox(treeView);
+
         //Creating a new BorderPane.
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10, 10, 10, 10));
@@ -42,9 +55,14 @@ public class Sisu extends Application {
         root.setBottom(quitButton);
         BorderPane.setAlignment(quitButton, Pos.TOP_RIGHT);
         
-        Scene scene = new Scene(root, 800, 500);                      
+        //Adding tabs to tabPane
+        var tab = new Tab("My profile", root);
+        var tabTwo = new Tab("Structure of studies"); //TODO: node (vbox?)
+        tabPane.getTabs().addAll(tab, tabTwo);
+        
+        Scene scene = new Scene(tabPane, 800, 500);                      
         stage.setScene(scene);
-        stage.setTitle("SisuGUI");
+        stage.setTitle("SISU");
         stage.show();
     }
 
@@ -72,7 +90,11 @@ public class Sisu extends Application {
         for (DegreeModule degreeProgramme : degreeProgrammesData) {
             choiceBox.getItems().add(degreeProgramme.getName());
         }
-
+        
+        Text selectText = new Text("Select your study programme:");
+        selectText.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 12));
+        
+        
         Button selectBtn = new Button();
         selectBtn.setText("Select");
         // Triggering event after choice
@@ -85,10 +107,13 @@ public class Sisu extends Application {
                     var studyTree = new getStudyTree(d.getName());
                     studyTree.getStudyTreeOf(d.getGroupId());
                     System.out.println(studyTree.getA());
+                    //TODO: Create new TreeItems
+                    //mod.getChildren().add(new TreeItem(d));
                     break;
                 }
             }
         });
+        
         
         // Disabling select button if a degreeprogramme is not chosen
         selectBtn.setDisable(true);
@@ -100,13 +125,19 @@ public class Sisu extends Application {
             }     
         });
         
+        //Creating a new TreeView
+        //TreeView treeView = new TreeView();
+        //treeView.setRoot(mod);
+        
+        
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
-        grid.add(choiceBox, 0, 0);
-        grid.add(selectBtn, 0, 1);
+        grid.add(selectText, 0, 0);
+        grid.add(choiceBox, 0, 1);
+        grid.add(selectBtn, 0, 2);
         //Creating a VBox for the left side.
         VBox leftVBox = new VBox(grid);
         leftVBox.setPrefWidth(380);

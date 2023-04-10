@@ -22,14 +22,14 @@ import java.util.HashMap;
  * @author jamik
  */
 public class getStudyTree {
-    
-    String moduleName;
     //if a degree has orientation options, stores them <OrientationName, GroupId>
     private HashMap<String, String> orientations = new HashMap<>();
-    private ArrayList<String> a = new ArrayList<>();
+    private CourseTree degree;
+    private CourseTree currentModule;
     
     public getStudyTree(String name) {
-        moduleName = name;
+        degree = new CourseTree(name);
+        currentModule = degree;
     }
     
     /*public void getStudyTreeOf(String program) {
@@ -76,8 +76,33 @@ public class getStudyTree {
             }              
                 
             orientations.put(modName, groupId);
-            System.out.println("Orientationmod: " + modName);
         }
+    }
+    
+    public void returnOrientations(String modName) {
+        try {
+            JsonObject res;
+            res = doGroupIdRequest(modName, "Module");
+            String programmeName;
+            JsonObject nameObj = res.getAsJsonObject("name");
+            if (nameObj.has("fi")) {
+                programmeName = nameObj.get("fi").getAsString();
+            } else {
+                programmeName = nameObj.get("en").getAsString();
+            }
+            
+            // check if the programme has orientation options, first rule object is decisive
+            JsonObject firstRuleObj = res.getAsJsonObject("rule");
+            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
+                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
+                findOrientations(orientationsArr);
+            } else{
+                orientations.put("No Seperate Orientation", modName);
+            }
+            
+        } catch (JsonSyntaxException e) {
+            System.out.println(e);
+        }  
     }
     
     public void getStudyTreeOf(String program) {
@@ -111,15 +136,17 @@ public class getStudyTree {
         }        
     }
     
-    public void processCourseJson(JsonObject courseObject) {
+    public void processCourseJson(JsonObject courseObject, CourseTree parent) {
         String name;
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
         if (nameObj.has("fi")) {
             name = nameObj.get("fi").getAsString();
         } else {
             name = nameObj.get("en").getAsString();
-        }       
-        System.out.println("course: " + name);
+        }
+        CourseTree course = new CourseTree(name);
+        parent.getChildren().add(course);
+        System.out.println("course: " + name + " " + parent.getName());
     }
         
     public JsonArray processJson(JsonObject jsonObject) {
@@ -164,9 +191,9 @@ public class getStudyTree {
         } else if (type.equals("CourseUnitRule")) {
             groupId = json.get("courseUnitGroupId").getAsString();
             ids.add(groupId);
-
+            
             res = doGroupIdRequest(groupId, "Course");
-            processCourseJson(res);
+            processCourseJson(res,currentModule);
 
         } else { 
             if (type.equals("ModuleRule")) {
@@ -181,7 +208,10 @@ public class getStudyTree {
                     modName = nameObj.get("en").getAsString();
                 }              
                 
-                System.out.println("mod: " + modName);
+                System.out.println("mod: " + modName + " " + currentModule.getName());
+                CourseTree module = new CourseTree(modName);
+                currentModule.getChildren().add(module);
+                currentModule = module;
                 jsonArray = processJson(res);
            } else {
                 jsonArray = processJson(json);
@@ -241,11 +271,12 @@ public class getStudyTree {
         return null;
     }
     
-    public String getA() {
-        return this.a.toString();
-    }
-    
     public HashMap<String, String> getOrientations() {
         return this.orientations;
     }
+    
+    public CourseTree getCourseTree() {
+        return this.degree;
+    }
+   
 }

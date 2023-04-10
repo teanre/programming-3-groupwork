@@ -4,6 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,6 +17,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TreeItem;
@@ -82,6 +88,8 @@ public class Sisu extends Application {
     
     private VBox getLeftVBox() {
         
+        VBox leftVBox = new VBox();
+        
         var degreeProgrammes = new getDegreeProgrammes();
         var degreeProgrammesData = degreeProgrammes.getData();
         
@@ -99,19 +107,64 @@ public class Sisu extends Application {
         selectBtn.setText("Select");
         // Triggering event after choice
         selectBtn.setOnAction((ActionEvent event) -> {
+            var children = leftVBox.getChildren();
+            if (children.size() > 1) {
+                var lastChild = children.get(children.size() - 1);
+                children.remove(lastChild);
+            }
             String chosen = choiceBox.getValue().strip();
             System.out.println("Selected: " + choiceBox.getValue().strip());
             // find the selected object and call for its degreetree
             for(DegreeModule d : degreeProgrammesData) {
                 if(d.getName().equals(chosen)) {
+                    //First get the orientations
                     var studyTree = new getStudyTree(d.getName());
-                    studyTree.getStudyTreeOf(d.getGroupId());
-                    System.out.println(studyTree.getA());
+                    studyTree.returnOrientations(d.getGroupId());     
+                    var selected = studyTree.getOrientations();
+                    
+                    // Display orientations by keeping the groupId but displaying only the name
+                    ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
+                    orientations.getItems().addAll(selected.entrySet());
+                    orientations.setCellFactory(param -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(HashMap.Entry<String, String> item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                        } else {
+                            setText(item.getKey());
+                        }
+                    }});
+                    
+                    //Button for selecting orientationg and launching displaying the studytree
+                    Button selectButton = new Button("Select");
+                    selectButton.setOnAction(e -> {
+                        HashMap.Entry<String, String> selectedItem = orientations.getSelectionModel().getSelectedItem();
+                        if (selectedItem != null) {
+                            System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
+                            String degreeName = d.getName();
+                            String Orientation = selectedItem.getKey();
+                            var req = new getStudyTree(selectedItem.getKey());
+                            req.getStudyTreeOf(selectedItem.getValue());
+                            
+                        }
+                    });
+                    
+                    Text selectOrientation = new Text("Select orientation:");
+                    selectOrientation.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 10));
+                    
+                    //display orientation choice and select button
+                    VBox vbox = new VBox(selectOrientation,orientations, selectButton);
+                    vbox.setPadding(new Insets(25, 25, 25, 25));
+                    vbox.setSpacing(10);
+                    leftVBox.getChildren().add(vbox);
+                    
                     //TODO: Create new TreeItems
                     //mod.getChildren().add(new TreeItem(d));
                     break;
                 }
             }
+            
         });
         
         
@@ -128,8 +181,7 @@ public class Sisu extends Application {
         //Creating a new TreeView
         //TreeView treeView = new TreeView();
         //treeView.setRoot(mod);
-        
-        
+            
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
@@ -139,7 +191,7 @@ public class Sisu extends Application {
         grid.add(choiceBox, 0, 1);
         grid.add(selectBtn, 0, 2);
         //Creating a VBox for the left side.
-        VBox leftVBox = new VBox(grid);
+        leftVBox.getChildren().add(grid);
         leftVBox.setPrefWidth(380);
 
         return leftVBox;
@@ -160,7 +212,7 @@ public class Sisu extends Application {
             
             StackPane userInfo = new StackPane(label);
             VBox rightVBox = new VBox(userInfo);
-            rightVBox.setPrefWidth(380);
+            rightVBox.setPrefWidth(280);
             return rightVBox;
             
         } catch (IOException e) {

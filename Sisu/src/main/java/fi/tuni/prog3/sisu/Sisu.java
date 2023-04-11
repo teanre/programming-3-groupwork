@@ -146,7 +146,10 @@ public class Sisu extends Application {
                             String Orientation = selectedItem.getKey();
                             var req = new getStudyTree(selectedItem.getKey());
                             req.getStudyTreeOf(selectedItem.getValue());
-                            
+                            var tree = req.getCourseTree();
+                            var display = new DisplayCourseTree(tree, d.getName());
+                            var treeview = display.getDisplay();
+                            leftVBox.getChildren().add(treeview);
                         }
                     });
                     

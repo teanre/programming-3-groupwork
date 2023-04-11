@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/javafx/FXMain.java to edit this template
- */
 package fi.tuni.prog3.sisu;
 
 import java.io.FileWriter;
@@ -23,7 +19,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 
 /**
- *
+ * Creates the login window which is first shown to user when she starts the program
+ * User can  set name, student number and starting year of studies. When log in
+ * action is emitted A new student object is created and passed to main program.
+ * Which then opens and login window closes
  * @author jamik
  */
 public class LoginWindow extends Application {

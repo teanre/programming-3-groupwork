@@ -1,11 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package fi.tuni.prog3.sisu;
 
 /**
- *
+ * Fetches all the degree programs from the API and returns them in an array list
  * @author jamik
  */
 

@@ -152,8 +152,40 @@ public class Sisu extends Application {
                             Tab secondTab = tabPane.getTabs().get(1);
                             secondTab.setContent(container);
                             
-                        }
-                    });
+                            
+                            // Add a listener to the TreeView items
+                            treeview.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                                
+                                // remove select button each time user changes selected course
+                                if (oldValue != null && newValue != null && container.getChildren().size() > 1) {
+                                    container.getChildren().remove(container.getChildren().get(children.size() - 1));
+                                }
+                                
+                                if (newValue != null) {
+                                    // Check if the selected item is already marked as completed
+                                    if (newValue.getValue().startsWith("**") && newValue.getValue().endsWith("**")) {
+                                        // Create a button to remove the completion and add it to the view
+                                        Button removeButton = new Button("Remove Completion");
+                                        container.getChildren().add(removeButton);
+                                        removeButton.setOnAction(evn -> {
+                                            // Remove the completion for the selected item and all its children
+                                            removeCompletion(newValue);
+                                            container.getChildren().remove(removeButton);
+                                        });
+                                    } else {
+                                        // Create a button to mark the item as completed and add it to the view
+                                        Button markButton = new Button("Mark Completed");
+                                        container.getChildren().add(markButton);
+                                        markButton.setOnAction(evn -> {
+                                            // Mark the selected item as completed and all its children
+                                            markCompleted(newValue);
+                                            container.getChildren().remove(markButton);
+                                        });
+                                    }
+                                }
+                            });                     
+                            }
+                        });
                     
                     Text selectOrientation = new Text("Select orientation:");
                     selectOrientation.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 10));
@@ -229,5 +261,31 @@ public class Sisu extends Application {
         });
         
         return button;
+    }
+    
+    // Helper function used in marking completed courses
+    // iterates selected items children also
+    private void markCompleted(TreeItem<String> item) {
+        if(!item.getValue().startsWith("**")){
+            item.setValue("** " + item.getValue() + " **");
+
+            for (TreeItem<String> child : item.getChildren()) {
+                markCompleted(child);
+            }
+        }
+    }
+    
+    // Helper function used in demarking completed courses
+    // iterates selected items children also
+    private void removeCompletion(TreeItem<String> item) {
+        // Remove the completion from the item
+        if(item.getValue().startsWith("**")){
+            item.setValue(item.getValue().substring(2, item.getValue().length() - 2));
+
+            // Remove the completion from all children recursively
+            for (TreeItem<String> child : item.getChildren()) {
+                removeCompletion(child);
+            }
+        }
     }
 }

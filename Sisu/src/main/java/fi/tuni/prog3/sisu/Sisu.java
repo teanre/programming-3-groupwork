@@ -39,14 +39,11 @@ import javafx.stage.Stage;
  * JavaFX Sisu
  */
 public class Sisu extends Application {
+    
+    private TabPane tabPane;
 
     @Override
     public void start(Stage stage) {
-        
-        //Creating a new TabPane and TreeView
-        TabPane tabPane = new TabPane();
-        TreeView treeView = new TreeView();
-        VBox vbox = new VBox(treeView);
 
         //Creating a new BorderPane.
         BorderPane root = new BorderPane();
@@ -62,8 +59,9 @@ public class Sisu extends Application {
         BorderPane.setAlignment(quitButton, Pos.TOP_RIGHT);
         
         //Adding tabs to tabPane
+        tabPane = new TabPane();
         var tab = new Tab("My profile", root);
-        var tabTwo = new Tab("Structure of studies"); //TODO: node (vbox?)
+        var tabTwo = new Tab("Structure of studies");
         tabPane.getTabs().addAll(tab, tabTwo);
         
         Scene scene = new Scene(tabPane, 800, 500);                      
@@ -149,7 +147,11 @@ public class Sisu extends Application {
                             var tree = req.getCourseTree();
                             var display = new DisplayCourseTree(tree, d.getName());
                             var treeview = display.getDisplay();
-                            leftVBox.getChildren().add(treeview);
+                            // displaying the treeview in the second tab
+                            VBox container = new VBox(treeview);
+                            Tab secondTab = tabPane.getTabs().get(1);
+                            secondTab.setContent(container);
+                            
                         }
                     });
                     
@@ -161,9 +163,6 @@ public class Sisu extends Application {
                     vbox.setPadding(new Insets(25, 25, 25, 25));
                     vbox.setSpacing(10);
                     leftVBox.getChildren().add(vbox);
-                    
-                    //TODO: Create new TreeItems
-                    //mod.getChildren().add(new TreeItem(d));
                     break;
                 }
             }
@@ -180,10 +179,6 @@ public class Sisu extends Application {
                 selectBtn.setDisable(false);
             }     
         });
-        
-        //Creating a new TreeView
-        //TreeView treeView = new TreeView();
-        //treeView.setRoot(mod);
             
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);

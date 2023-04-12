@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package fi.tuni.prog3.sisu;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -17,10 +14,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- *
- * @author jamik
- */
 public class getStudyTree {
     //if a degree has orientation options, stores them <OrientationName, GroupId>
     private HashMap<String, String> orientations = new HashMap<>();

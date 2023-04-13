@@ -13,6 +13,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 
 public class getStudyTree {
     //if a degree has orientation options, stores them <OrientationName, GroupId>
@@ -25,39 +27,9 @@ public class getStudyTree {
         currentModule = degree;
     }
     
-    /*public void getStudyTreeOf(String program) {
-        try {
-        Gson gson = new Gson();
-        String res;
-        res = doGroupIdRequest(program, "Module");
-        // do request for course if res isn't a module
-        if(res.length() < 3) {
-            res = doGroupIdRequest(program, "Course");
-        }
-        JsonArray jsonArray = JsonParser.parseString(res).getAsJsonArray();
-        for (JsonElement jsonElement : jsonArray) {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-            JsonObject ruleObject = jsonObject.get("rule").getAsJsonObject();
-            JsonObject innerRule = ruleObject.get("rule").getAsJsonObject();
-            JsonArray ruleArray = innerRule.get("rules").getAsJsonArray();
-            for (JsonElement rule : ruleArray) {
-                JsonObject moduleRule = rule.getAsJsonObject();
-                JsonArray moduleRules = moduleRule.getAsJsonArray("rules");
-                for (JsonElement moduleElement : moduleRules) {
-                    JsonObject moduleObject = moduleElement.getAsJsonObject();
-                    String moduleGroupId = moduleObject.get("moduleGroupId").getAsString();
-                    a.add(moduleGroupId);
-                }
-            }
-        }
-        } catch (JsonSyntaxException e) {
-            System.out.println(e);
-        }       
-    }*/
     public void findOrientations(JsonArray orientationOptions) {
         String modName;
         for (JsonElement el : orientationOptions) {
-            //gots to gets from api right, jokanen el kerrallaa
             String groupId = el.getAsJsonObject().get("moduleGroupId").getAsString();
 
             JsonObject res = doGroupIdRequest(groupId, "Module");
@@ -66,8 +38,7 @@ public class getStudyTree {
                     modName = nameObj.get("fi").getAsString();
             } else {
                     modName = nameObj.get("en").getAsString();
-            }              
-                
+            }                              
             orientations.put(modName, groupId);
         }
     }
@@ -89,8 +60,8 @@ public class getStudyTree {
             if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
                 JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
                 findOrientations(orientationsArr);
-            } else{
-                orientations.put("No Seperate Orientation", modName);
+            }else{
+                orientations.put("No Separate Orientation", modName);
             }
             
         } catch (JsonSyntaxException e) {
@@ -98,7 +69,8 @@ public class getStudyTree {
         }  
     }
     
-    public void getStudyTreeOf(String program) {
+
+    public void getStudyTreeOf(String program, TreeItem<String> root) {
         try {
             JsonObject res;
             res = doGroupIdRequest(program, "Module");
@@ -109,27 +81,17 @@ public class getStudyTree {
             } else {
                 programmeName = nameObj.get("en").getAsString();
             }
-            
-            // check if the programme has orientation options, first rule object is decisive
-            JsonObject firstRuleObj = res.getAsJsonObject("rule");
-            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
-                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
-                findOrientations(orientationsArr);
-                
-                //!!!implement user choosing an orientation here, and get from orientationsmap the id
-                
-                //then with it's id get the right jsonobj to traverse
-                //res = doGroupIdRequest(program, "Module");
-            }
                        
             System.out.println(programmeName);
-            traverseStudyTree(res);
+            TreeItem<String> currRoot = new TreeItem<String>(programmeName);
+            root.getChildren().add(currRoot);
+            traverseJson(res, currRoot);
         } catch (JsonSyntaxException e) {
             System.out.println(e);
         }        
     }
     
-    public void processCourseJson(JsonObject courseObject, CourseTree parent) {
+    public void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {
         String name;
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
         if (nameObj.has("fi")) {
@@ -137,9 +99,11 @@ public class getStudyTree {
         } else {
             name = nameObj.get("en").getAsString();
         }
-        CourseTree course = new CourseTree(name);
+
+        TreeItem<String> course = new TreeItem<>(name);
         parent.getChildren().add(course);
-        System.out.println("course: " + name + " " + parent.getName());
+       // CourseTree course = new CourseTree(name);
+        System.out.println("course: " + name + " " /*+ parent.getName()*/);
     }
         
     public JsonArray processJson(JsonObject jsonObject) {
@@ -167,14 +131,15 @@ public class getStudyTree {
         }
 
         return finalArray;
-    }
+    }   
     
-    public void traverseStudyTree(JsonObject json) {       
+    public void traverseJson(JsonObject json, TreeItem<String> parent) {       
         ArrayList<String> ids = new ArrayList<>();
-        
+         
         JsonObject res; 
         String groupId;
         String modName;
+        
         String type = json.get("type").getAsString();
         JsonArray jsonArray = null;
         
@@ -186,7 +151,7 @@ public class getStudyTree {
             ids.add(groupId);
             
             res = doGroupIdRequest(groupId, "Course");
-            processCourseJson(res,currentModule);
+            processCourseJson(res, parent);
 
         } else { 
             if (type.equals("ModuleRule")) {
@@ -201,12 +166,18 @@ public class getStudyTree {
                     modName = nameObj.get("en").getAsString();
                 }              
                 
-                System.out.println("mod: " + modName + " " + currentModule.getName());
-                CourseTree module = new CourseTree(modName);
+                System.out.println("mod: " + modName + " " /*+ currentModule.getName()*/);
+                /*CourseTree module = new CourseTree(modName);
                 currentModule.getChildren().add(module);
-                currentModule = module;
+                currentModule = module;*/
+                TreeItem<String> oldParent = parent;
+                
+                //reassign parent
+                parent = new TreeItem<>(modName);
+                
+                oldParent.getChildren().add(parent);
                 jsonArray = processJson(res);
-           } else {
+            } else {
                 jsonArray = processJson(json);
             }
             
@@ -217,15 +188,27 @@ public class getStudyTree {
                         JsonObject obj = el.getAsJsonObject();                   
                         //skip AnyModuleRules at this point, they would be optional modules
                         if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
-                            traverseStudyTree(obj);
+                            //traverseStudyTree(obj);
+                            traverseJson(obj, parent);
                         }
                     }
                 }  
-            }
-                   
+            }                   
         }       
     }
    
+    private void traverseModules(JsonObject json, TreeItem<String> parent) {
+        JsonArray modules = json.getAsJsonArray("modules");
+        for (JsonElement module : modules) {
+            JsonObject moduleObj = module.getAsJsonObject();
+            JsonObject nameObj = moduleObj.getAsJsonObject("name");
+            String name = nameObj.has("fi") ? nameObj.get("fi").getAsString() : nameObj.get("en").getAsString();
+            TreeItem<String> moduleNode = new TreeItem<>(name);
+            parent.getChildren().add(moduleNode);
+            traverseJson(moduleObj, moduleNode);
+        }
+    }
+    
     
     public static JsonObject doGroupIdRequest(String groupId, String type) {
         try {

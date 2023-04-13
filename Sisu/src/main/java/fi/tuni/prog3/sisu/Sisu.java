@@ -84,6 +84,7 @@ public class Sisu extends Application {
         return centerHBox;
     }
     
+    
     private VBox getLeftVBox() {
         
         VBox leftVBox = new VBox();
@@ -98,12 +99,12 @@ public class Sisu extends Application {
         }
         
         Text selectText = new Text("Select your study programme:");
-        selectText.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 12));
-        
+        selectText.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 12));        
         
         Button selectBtn = new Button();
         selectBtn.setText("Select");
-        // Triggering event after choice
+        
+               // Triggering event after choice
         selectBtn.setOnAction((ActionEvent event) -> {
             var children = leftVBox.getChildren();
             if (children.size() > 1) {
@@ -119,6 +120,10 @@ public class Sisu extends Application {
                     var studyTree = new getStudyTree(d.getName());
                     studyTree.returnOrientations(d.getGroupId());     
                     var selected = studyTree.getOrientations();
+                    
+                    //crete treeView
+                    TreeView<String> treeView = new TreeView<>(); 
+ 
                     
                     // Display orientations by keeping the groupId but displaying only the name
                     ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
@@ -142,19 +147,22 @@ public class Sisu extends Application {
                             System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
                             String degreeName = d.getName();
                             String Orientation = selectedItem.getKey();
+                            
+                            TreeItem<String> root = new TreeItem<>(degreeName);
+                            treeView.setRoot(root);
+                            
                             var req = new getStudyTree(selectedItem.getKey());
-                            req.getStudyTreeOf(selectedItem.getValue());
-                            var tree = req.getCourseTree();
-                            var display = new DisplayCourseTree(tree, d.getName());
-                            var treeview = display.getDisplay();
+                            req.getStudyTreeOf(selectedItem.getValue(), root);
+                            
+    
                             // displaying the treeview in the second tab
-                            VBox container = new VBox(treeview);
+                            VBox container = new VBox(treeView);
                             Tab secondTab = tabPane.getTabs().get(1);
                             secondTab.setContent(container);
                             
                             
                             // Add a listener to the TreeView items
-                            treeview.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                            treeView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                                 
                                 // remove select button each time user changes selected course
                                 if (oldValue != null && newValue != null && container.getChildren().size() > 1) {
@@ -200,7 +208,90 @@ public class Sisu extends Application {
             }
             
         });
-        
+
+        // Triggering event after choice
+       /* selectBtn.setOnAction((ActionEvent event) -> {
+            var children = leftVBox.getChildren();
+            if (children.size() > 1) {
+                var lastChild = children.get(children.size() - 1);
+                children.remove(lastChild);
+            }
+            String chosen = choiceBox.getValue().strip();
+            System.out.println("Selected: " + choiceBox.getValue().strip());
+            // find the selected object and call for its degreetree
+            for(DegreeModule d : degreeProgrammesData) {
+                if(d.getName().equals(chosen)) {
+                    //First get the orientations
+                    var studyTree = new getStudyTree(d.getName());
+                    studyTree.returnOrientations(d.getGroupId());     
+                    var selected = studyTree.getOrientations();
+                
+                //create treeview   
+                TreeView<String> treeView = new TreeView<>();    
+                 //if the degree programme has no separate orientations, create subtab degree tree
+                if(selected.isEmpty()) {
+                   
+                    TreeItem<String> root = new TreeItem<>(d.getName());
+                    treeView.setRoot(root);
+                    
+                    var req = new getStudyTree(d.getName());
+                    req.getStudyTreeOf(d.getGroupId(), root);
+                   // var tree = req.getCourseTree();
+                    //var display = new DisplayCourseTree(tree, d.getName());
+                    //tähä kutsutaa tekemistä uusen funk
+                    createSubTab(treeView, children.size()-1);
+                } else {                
+                    // Display orientations by keeping the groupId but displaying only the name
+                    ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
+                    orientations.getItems().addAll(selected.entrySet());
+                    orientations.setCellFactory(param -> new ListCell<>() {
+                    @Override
+                    protected void updateItem(HashMap.Entry<String, String> item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                        } else {
+                            setText(item.getKey());
+                        }
+                    }});
+                    
+                    //Button for selecting orientation and launching displaying the studytree
+                    Button selectButton = new Button("Select");
+                    selectButton.setOnAction(e -> {
+                        HashMap.Entry<String, String> selectedItem = orientations.getSelectionModel().getSelectedItem();
+                        if (selectedItem != null) {
+                            System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
+                            String degreeName = d.getName();
+                            String Orientation = selectedItem.getKey();
+                            
+                            TreeItem<String> root = new TreeItem<>(degreeName);
+                            treeView.setRoot(root);
+                            
+                            var req = new getStudyTree(selectedItem.getKey());
+                            req.getStudyTreeOf(selectedItem.getValue(), root);
+                            /*var tree = req.getCourseTree();
+                            var display = new DisplayCourseTree(tree, d.getName());
+                            //tähä kutsutaa tekemistä uusen funk
+                            createSubTab(treeView, children.size()-1);
+                                                   
+                        }
+                    });
+                    
+                    Text selectOrientation = new Text("Select orientation:");
+                    selectOrientation.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 10));
+                    
+                    //display orientation choice and select button
+                    VBox vbox = new VBox(selectOrientation,orientations, selectButton);
+                    vbox.setPadding(new Insets(25, 25, 25, 25));
+                    vbox.setSpacing(10);
+                    leftVBox.getChildren().add(vbox);
+                    break;
+                }
+                }
+            }
+            
+        });
+        */
         
         // Disabling select button if a degreeprogramme is not chosen
         selectBtn.setDisable(true);
@@ -226,6 +317,47 @@ public class Sisu extends Application {
 
         return leftVBox;
     }
+    
+    //oisko eriksee treeview hommat 
+    /*private void createSubTab(TreeView tree, int size) {
+       // var treeview = tree.getDisplay();
+        // displaying the treeview in the second tab
+        VBox container = new VBox(tree);
+        Tab secondTab = tabPane.getTabs().get(1);
+        secondTab.setContent(container);
+                            
+        // Add a listener to the TreeView items
+        tree.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            // remove select button each time user changes selected course
+            if (oldValue != null && newValue != null && container.getChildren().size() > 1) {
+                 container.getChildren().remove(container.getChildren().get(size));
+            }
+            
+            if (newValue != null ) {
+                // Check if the selected item is already marked as completed
+                if (newValue.getValue().startsWith("**") && newValue.getValue().endsWith("**")) {
+                    // Create a button to remove the completion and add it to the view
+                    Button removeButton = new Button("Remove Completion");
+                    container.getChildren().add(removeButton);
+                    removeButton.setOnAction(evn -> {
+                    // Remove the completion for the selected item and all its children
+                       // removeCompletion(newValue);
+                        container.getChildren().remove(removeButton);
+                    });
+                } else {
+                // Create a button to mark the item as completed and add it to the view
+                    Button markButton = new Button("Mark Completed");
+                    container.getChildren().add(markButton);
+                    markButton.setOnAction(evn -> {
+                    // Mark the selected item as completed and all its children
+                    //markCompleted(newValue);
+                    container.getChildren().remove(markButton);
+                    });
+                }
+            }
+        }); 
+        
+    }*/
     
     private VBox getRightVBox() {
         //Creating a VBox for the right side.

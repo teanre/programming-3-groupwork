@@ -60,9 +60,9 @@ public class getStudyTree {
             if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
                 JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
                 findOrientations(orientationsArr);
-            }else{
+            }/*else{
                 orientations.put("No Separate Orientation", modName);
-            }
+            }*/
             
         } catch (JsonSyntaxException e) {
             System.out.println(e);

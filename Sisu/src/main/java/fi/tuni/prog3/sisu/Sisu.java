@@ -21,8 +21,11 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
@@ -66,7 +69,7 @@ public class Sisu extends Application {
         var tabTwo = new Tab("Structure of studies");
         tabPane.getTabs().addAll(tab, tabTwo);
         
-        Scene scene = new Scene(tabPane, 800, 500);                      
+        Scene scene = new Scene(tabPane, 800, 500); 
         stage.setScene(scene);
         stage.setTitle("SISU");
         stage.show();
@@ -204,18 +207,51 @@ public class Sisu extends Application {
     private void displayTreeView(String groupId, String name, TreeView treeView){
         TreeItem<String> root = new TreeItem<>(name);
         treeView.setRoot(root);
-                            
+        
+        SplitPane splitPane = new SplitPane();
+        splitPane.setDividerPositions(0.3f);
+                       
         var req = new getStudyTree(name);
         req.getStudyTreeOf(groupId, root);
+        var courses = req.getCoursesOfProgramme();
                             
         // displaying the treeview in the second tab
         VBox container = new VBox(treeView);
         Tab secondTab = tabPane.getTabs().get(1);
-        secondTab.setContent(container);
+        secondTab.setContent(splitPane);
 
         Button statusButton = new Button();
         statusButton.setText("Mark Completed");
         container.getChildren().add(statusButton);
+        
+        // Create a TextArea to display course information
+        TextArea courseInfoTextArea = new TextArea();
+        container.getChildren().add(courseInfoTextArea);
+        courseInfoTextArea.setEditable(false);
+        courseInfoTextArea.setWrapText(true);
+        courseInfoTextArea.setMaxWidth(300);
+        
+        splitPane.getItems().addAll(container, courseInfoTextArea);
+
+        // Add a listener to the TreeView items
+        treeView.setOnMouseMoved(event -> {
+            TreeItem<String> item = (TreeItem<String>) treeView.getSelectionModel().getSelectedItem();
+            if (item != null) {
+                String value;
+                if(item.getValue().startsWith("*")){
+                    value = item.getValue().substring(1);
+                } else {
+                    value = item.getValue();
+                }
+                if(courses.containsKey(value)){
+                    ArrayList<String> items = courses.get(value);
+                    String content = String.join("\n\n", items);
+                    courseInfoTextArea.setText(content);
+                } else {
+                    courseInfoTextArea.setText("");
+                }  
+            } 
+        });
 
         // Add a listener to the TreeView items
         treeView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener() {
@@ -223,7 +259,7 @@ public class Sisu extends Application {
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 if (newValue != null) {
                     // check if the selected item is already marked as completed
-                    if (((TreeItem<String>)newValue).getValue().startsWith("**") && ((TreeItem<String>)newValue).getValue().endsWith("**")) {
+                    if (((TreeItem<String>)newValue).getValue().startsWith("*")) {
                         // Set the button text and action for removing completion
                         statusButton.setText("Remove Completion");
                         statusButton.setOnAction(evn -> {
@@ -232,7 +268,7 @@ public class Sisu extends Application {
                         });
                     } else if (((TreeItem<String>)newValue).isLeaf()) {
                         // Check if the selected item is a leaf node and not already completed
-                        if (!((TreeItem<String>)newValue).getValue().startsWith("**") && !((TreeItem<String>)newValue).getValue().endsWith("**")) {
+                        if (!((TreeItem<String>)newValue).getValue().startsWith("*")) {
                             // Set the button text and action for marking completion
                             statusButton.setText("Mark Completed");
                             statusButton.setOnAction(evn -> {
@@ -292,8 +328,8 @@ public class Sisu extends Application {
     // Helper function used in marking completed courses
     // iterates selected items children also
     private void markCompleted(TreeItem<String> item) {
-        if(item.isLeaf() && !item.getValue().startsWith("**")){
-            item.setValue("** " + item.getValue() + " **");
+        if(item.isLeaf() && !item.getValue().startsWith("*")){
+            item.setValue("*" + item.getValue());
             
             //don't allow for children
             /*for (TreeItem<String> child : item.getChildren()) {
@@ -306,8 +342,8 @@ public class Sisu extends Application {
     // iterates selected items children also
     private void removeCompletion(TreeItem<String> item) {
         // Remove the completion from the item
-        if(item.getValue().startsWith("**")){
-            item.setValue(item.getValue().substring(2, item.getValue().length() - 2));
+        if(item.getValue().startsWith("*")){
+            item.setValue(item.getValue().substring(1));
             
             //ignore children
             // Remove the completion from all children recursively

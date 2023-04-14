@@ -21,6 +21,7 @@ public class getStudyTree implements iAPI {
     private HashMap<String, String> orientations = new HashMap<>();
     private CourseTree degree;
     private CourseTree currentModule;
+    private HashMap<String, ArrayList<String>> coursesOfProgramme = new HashMap<>();
     
     public getStudyTree(String name) {
         degree = new CourseTree(name);
@@ -107,12 +108,81 @@ public class getStudyTree implements iAPI {
     
     public void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {       
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
-        String name = getNameOfMod(nameObj);;
-
+        String name = getNameOfMod(nameObj);
+        
+        // getting some extra data about courses and saving them
+        ArrayList<String> data = new ArrayList<>();
+        data.add(addCredits(courseObject));
+        data.add(addContent(courseObject));
+        data.add(addOutComes(courseObject));
+        data.add(addLearningMaterial(courseObject));
+        data.add(addPrerequisites(courseObject));
+        
+        coursesOfProgramme.put(name, data);
+        
         TreeItem<String> course = new TreeItem<>(name);
         parent.getChildren().add(course);
        // CourseTree course = new CourseTree(name);
         System.out.println("course: " + name + " " /*+ parent.getName()*/);
+    }
+    
+    private String addPrerequisites(JsonObject courseObject) {
+        var Obj = courseObject.get("prerequisites");
+        if(!Obj.isJsonObject()){
+            return("Prerequisites: -");
+        } else {
+            var prerequisitesObj = Obj.getAsJsonObject();
+            String data = getNameOfMod(prerequisitesObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return("Prerequisites: " + text);
+        }
+    }
+    
+    private String addLearningMaterial(JsonObject courseObject) {
+        var Obj = courseObject.get("learningMaterial");
+        if(!Obj.isJsonObject()){
+            return("Learning Material: -");
+        } else {
+            var learningObj = Obj.getAsJsonObject();
+            String data = getNameOfMod(learningObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return("Learning Material: " + text);
+        }
+    }
+    
+    private String addContent(JsonObject courseObject) {
+        var Obj = courseObject.get("content");
+        if(!Obj.isJsonObject()){
+            return("Content: -");
+        } else {
+            var contentObj = Obj.getAsJsonObject();
+            String data = getNameOfMod(contentObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return("Content: " + text);
+        }
+    }
+    
+    private String addOutComes(JsonObject courseObject) {
+        var Obj = courseObject.get("outcomes");
+        if(!Obj.isJsonObject()){
+            return("Outcomes: -");
+        } else {
+            var outcomesObj = Obj.getAsJsonObject();
+            String data = getNameOfMod(outcomesObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return("Outcomes: " + text);
+        }
+    }
+    
+    private String addCredits(JsonObject courseObject) {
+        JsonObject creditsObj = courseObject.get("credits").getAsJsonObject();
+        int minCredits = creditsObj.get("min").getAsInt();
+        int maxCredits = creditsObj.get("max").getAsInt();
+        if(minCredits == maxCredits) {
+            return(minCredits + " Credits");
+        } else {
+            return(minCredits + "-" + maxCredits + " Credits");
+        }
     }
         
     public JsonArray processJson(JsonObject jsonObject) {
@@ -208,6 +278,10 @@ public class getStudyTree implements iAPI {
     
     public CourseTree getCourseTree() {
         return this.degree;
+    }
+    
+    public HashMap<String, ArrayList<String>> getCoursesOfProgramme() {
+        return this.coursesOfProgramme;
     }
    
     /**

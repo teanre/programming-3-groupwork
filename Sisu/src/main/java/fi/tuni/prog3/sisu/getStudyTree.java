@@ -16,8 +16,8 @@ import java.util.HashMap;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
-public class getStudyTree {
-    //if a degree has orientation options, stores them <OrientationName, GroupId>
+public class getStudyTree implements iAPI {
+    
     private HashMap<String, String> orientations = new HashMap<>();
     private CourseTree degree;
     private CourseTree currentModule;
@@ -27,34 +27,50 @@ public class getStudyTree {
         currentModule = degree;
     }
     
+    /**
+     * 
+     * @param nameObject, JsonObject that has name data
+     * @return String, name of the course or module. primarily finnish one, if it's not 
+     * given in JsonObject, then return  the english one
+     */
+    public String getNameOfMod(JsonObject nameObject) {
+        String name;
+        if (nameObject.has("fi")) {
+            name = nameObject.get("fi").getAsString();
+        } else {
+            name = nameObject.get("en").getAsString();
+        }  
+        return name;
+    }
+    
+    /**
+     * Stores data of a degree programmes orientation options in a HashMap<OrientationName, GroupId>
+     * @param orientationOptions, a JsonArray including the orientations
+     */
     public void findOrientations(JsonArray orientationOptions) {
-        String modName;
         for (JsonElement el : orientationOptions) {
             String groupId = el.getAsJsonObject().get("moduleGroupId").getAsString();
 
-            JsonObject res = doGroupIdRequest(groupId, "Module");
+            String urlString = createUrlString(groupId, "Module");
+                
+            JsonObject res = getJsonObjectFromApi(urlString);
+            
             JsonObject nameObj = res.getAsJsonObject("name");
-            if (nameObj.has("fi")) {
-                    modName = nameObj.get("fi").getAsString();
-            } else {
-                    modName = nameObj.get("en").getAsString();
-            }                              
-            orientations.put(modName, groupId);
+            String name = getNameOfMod(nameObj);
+            orientations.put(name, groupId);
         }
     }
     
+    /**
+     * 
+     * @param modName 
+     */
     public void returnOrientations(String modName) {
         try {
             JsonObject res;
-            res = doGroupIdRequest(modName, "Module");
-            String programmeName;
-            JsonObject nameObj = res.getAsJsonObject("name");
-            if (nameObj.has("fi")) {
-                programmeName = nameObj.get("fi").getAsString();
-            } else {
-                programmeName = nameObj.get("en").getAsString();
-            }
-            
+            String urlString = createUrlString(modName, "Module");
+                
+            res = getJsonObjectFromApi(urlString);
             // check if the programme has orientation options, first rule object is decisive
             JsonObject firstRuleObj = res.getAsJsonObject("rule");
             if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
@@ -73,14 +89,12 @@ public class getStudyTree {
     public void getStudyTreeOf(String program, TreeItem<String> root) {
         try {
             JsonObject res;
-            res = doGroupIdRequest(program, "Module");
-            String programmeName;
+            
+            String urlString = createUrlString(program, "Module");               
+            res = getJsonObjectFromApi(urlString);
+            
             JsonObject nameObj = res.getAsJsonObject("name");
-            if (nameObj.has("fi")) {
-                programmeName = nameObj.get("fi").getAsString();
-            } else {
-                programmeName = nameObj.get("en").getAsString();
-            }
+            String programmeName = getNameOfMod(nameObj);
                        
             System.out.println(programmeName);
             TreeItem<String> currRoot = new TreeItem<String>(programmeName);
@@ -91,14 +105,9 @@ public class getStudyTree {
         }        
     }
     
-    public void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {
-        String name;
+    public void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {       
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
-        if (nameObj.has("fi")) {
-            name = nameObj.get("fi").getAsString();
-        } else {
-            name = nameObj.get("en").getAsString();
-        }
+        String name = getNameOfMod(nameObj);;
 
         TreeItem<String> course = new TreeItem<>(name);
         parent.getChildren().add(course);
@@ -150,7 +159,9 @@ public class getStudyTree {
             groupId = json.get("courseUnitGroupId").getAsString();
             ids.add(groupId);
             
-            res = doGroupIdRequest(groupId, "Course");
+            String urlString = createUrlString(groupId, "Course");
+                
+            res = getJsonObjectFromApi(urlString);
             processCourseJson(res, parent);
 
         } else { 
@@ -158,20 +169,15 @@ public class getStudyTree {
                 groupId = json.get("moduleGroupId").getAsString();
                 ids.add(groupId);
 
-                res = doGroupIdRequest(groupId, "Module");
+                String urlString = createUrlString(groupId, "Module");                
+                res = getJsonObjectFromApi(urlString);
+                
                 JsonObject nameObj = res.getAsJsonObject("name");
-                if (nameObj.has("fi")) {
-                    modName = nameObj.get("fi").getAsString();
-                } else {
-                    modName = nameObj.get("en").getAsString();
-                }              
-                
+                modName = getNameOfMod(nameObj);
+
                 System.out.println("mod: " + modName + " " /*+ currentModule.getName()*/);
-                /*CourseTree module = new CourseTree(modName);
-                currentModule.getChildren().add(module);
-                currentModule = module;*/
-                TreeItem<String> oldParent = parent;
-                
+
+                TreeItem<String> oldParent = parent;               
                 //reassign parent
                 parent = new TreeItem<>(modName);
                 
@@ -188,7 +194,6 @@ public class getStudyTree {
                         JsonObject obj = el.getAsJsonObject();                   
                         //skip AnyModuleRules at this point, they would be optional modules
                         if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
-                            //traverseStudyTree(obj);
                             traverseJson(obj, parent);
                         }
                     }
@@ -196,29 +201,41 @@ public class getStudyTree {
             }                   
         }       
     }
-   
-    private void traverseModules(JsonObject json, TreeItem<String> parent) {
-        JsonArray modules = json.getAsJsonArray("modules");
-        for (JsonElement module : modules) {
-            JsonObject moduleObj = module.getAsJsonObject();
-            JsonObject nameObj = moduleObj.getAsJsonObject("name");
-            String name = nameObj.has("fi") ? nameObj.get("fi").getAsString() : nameObj.get("en").getAsString();
-            TreeItem<String> moduleNode = new TreeItem<>(name);
-            parent.getChildren().add(moduleNode);
-            traverseJson(moduleObj, moduleNode);
-        }
+    
+    public HashMap<String, String> getOrientations() {
+        return this.orientations;
     }
     
-    
-    public static JsonObject doGroupIdRequest(String groupId, String type) {
-        try {
-        URL url;
-        // Set the request
+    public CourseTree getCourseTree() {
+        return this.degree;
+    }
+   
+    /**
+     * Creates appropriate url for data fecthing from API
+     * @param groupId String, groupId of module or course
+     * @param type String, clarifies type of data fetched
+     * @return String, the correct url
+     */
+    public String createUrlString(String groupId, String type){
+        String urlString;
         if(type.equals("Module")) {
-            url = new URL("https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId="+groupId+"&universityId=tuni-university-root-id");
+            urlString = "https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId=" +groupId+ "&universityId=tuni-university-root-id";
         } else {
-            url = new URL("https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId="+groupId+"&universityId=tuni-university-root-id");
+            urlString = "https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId="+groupId+"&universityId=tuni-university-root-id";
         }
+        return urlString;
+    }
+    
+    /**
+     * Retrieves data from API
+     * @param urlString
+     * @return a JsonObject containing necessary data from API
+     */
+    @Override
+    public JsonObject getJsonObjectFromApi(String urlString) {
+        try {
+        URL url = new URL(urlString);
+        // Set the request
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
 
@@ -230,8 +247,6 @@ public class getStudyTree {
             response.append(inputLine);
         }
         in.close();
-        /*String req = response.toString();
-        return req;*/
         
         //return a jsonObject
         JsonElement jsonElement = JsonParser.parseString(response.toString());
@@ -246,13 +261,4 @@ public class getStudyTree {
         }
         return null;
     }
-    
-    public HashMap<String, String> getOrientations() {
-        return this.orientations;
-    }
-    
-    public CourseTree getCourseTree() {
-        return this.degree;
-    }
-   
 }

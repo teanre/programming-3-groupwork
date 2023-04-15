@@ -2,12 +2,17 @@ package fi.tuni.prog3.sisu;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -38,6 +43,7 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 
 /**
@@ -49,6 +55,8 @@ public class Sisu extends Application {
     private String degree;
     private String orientation;
     private VBox rightVBox;
+    private String studentNumber;
+    private Label messageLabel;
 
     @Override
     public void start(Stage stage) {
@@ -244,6 +252,20 @@ public class Sisu extends Application {
         container.getChildren().add(saveButton);
         
         splitPane.getItems().addAll(container, rightSide);
+        
+        //Add a listener to save button
+        saveButton.setOnAction((ActionEvent eh) -> {
+            messageLabel = new Label();
+            rightSide.getChildren().add(messageLabel);
+            ArrayList<String> completed = new ArrayList<>();
+            getCompletedCourses(root, completed);
+            try {
+                saveCompletedCourses(studentNumber, completed);
+                showMessage("Student: " + studentNumber + " Completions Saved", 3000);
+            } catch (Exception ex) {
+                
+            }
+        });
 
         // Add a listener to the TreeView items
         treeView.setOnMouseMoved(event -> {
@@ -311,6 +333,7 @@ public class Sisu extends Application {
                             "Student: " + info.getStudentNumber() + "\n" +
                     "Starting year: " + info.getStartingYear());
             
+            studentNumber = info.getStudentNumber();
             label.setAlignment(Pos.CENTER);
             label.setPadding(new Insets(10));
             
@@ -363,5 +386,39 @@ public class Sisu extends Application {
                 removeCompletion(child);
             }*/
         }
+    }
+    
+    private void getCompletedCourses(TreeItem<String> root, ArrayList<String> items) {
+        if(root.getValue().startsWith("*")) {
+            items.add(root.getValue().substring(1));
+        }
+        for (TreeItem<String> child : root.getChildren()) {
+            getCompletedCourses(child, items);
+        }
+    }
+    
+    private void saveCompletedCourses(String studentNumber, ArrayList<String> items) throws Exception {
+        
+        SaveCompletions save = new SaveCompletions();
+        
+         // Read existing data from the file
+        JsonObject existingData = save.readFromFile("courseCompletions.json");
+
+        // Check if studentNumber already exists in the file
+        if (existingData.has(studentNumber)) {
+            // Replace the existing studentNumber and items objects
+            existingData.remove(studentNumber);
+        }
+        existingData.addProperty(studentNumber, new Gson().toJson(items));
+
+        // Write the updated data to the file
+        save.writeToFile("courseCompletions.json", existingData);
+    }
+    
+    // Show a message for a given duration
+    private void showMessage(String message, int durationMillis) {
+        messageLabel.setText(message);
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(durationMillis), e -> messageLabel.setText("")));
+        timeline.play();
     }
 }

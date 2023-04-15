@@ -4,6 +4,7 @@
  */
 package fi.tuni.prog3.sisu;
 
+import com.google.gson.JsonObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -14,16 +15,17 @@ public interface iReadAndWriteToFile {
     /**
      * Reads JSON from the given file.
      * @param fileName name of the file to read from.
-     * @return true if the read was successful, otherwise false.
+     * @return JsonObject
      * @throws Exception if the method e.g, cannot find the file. 
      */
-    public boolean readFromFile(String fileName) throws Exception; 
+    public JsonObject readFromFile(String fileName) throws Exception; 
     
     /**
      * Write the student progress as JSON into the given file.
      * @param fileName name of the file to write to.
+     * @param jsonObject item to be added to the file.
      * @return true if the write was successful, otherwise false.
      * @throws Exception if the method e.g., cannot write to a file.
      */
-    public boolean writeToFile(String fileName) throws Exception;
+    public boolean writeToFile(String fileName, JsonObject jsonObject) throws Exception;
 }

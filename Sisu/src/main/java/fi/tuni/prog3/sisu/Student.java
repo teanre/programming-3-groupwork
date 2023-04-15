@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 /**
  * Class to simulate student object
- * @author jamik
  */
 public class Student {
     // SerializedNames to be able to use these in gson directly

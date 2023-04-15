@@ -24,7 +24,6 @@ import javafx.beans.binding.BooleanBinding;
  * User can  set name, student number and starting year of studies. When log in
  * action is emitted A new student object is created and passed to main program.
  * Which then opens and login window closes
- * @author jamik
  */
 public class LoginWindow extends Application {
     

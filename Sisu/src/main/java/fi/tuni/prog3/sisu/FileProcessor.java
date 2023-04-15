@@ -179,6 +179,7 @@ public class FileProcessor implements iReadAndWriteToFile {
             gson.toJson(jsonObject, writer);
         } catch (IOException e) {
             System.out.println(e);
+            return false;
         }
         return true;
     

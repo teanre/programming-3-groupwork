@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -52,11 +51,9 @@ import javafx.util.Duration;
 public class Sisu extends Application {
     
     private TabPane tabPane;
-    private String degree;
-    private String orientation;
     private VBox rightVBox;
-    private String studentNumber;
     private Label messageLabel;
+    private Student currentStudent;
 
     @Override
     public void start(Stage stage) {
@@ -129,7 +126,6 @@ public class Sisu extends Application {
             }
             
             String chosen = choiceBox.getValue().strip();
-            degree = chosen;
             System.out.println("Selected: " + choiceBox.getValue().strip());
             // find the selected object and call for its degreetree
             for(DegreeModule d : degreeProgrammesData) {
@@ -167,8 +163,7 @@ public class Sisu extends Application {
                             if (selectedItem != null) {
                                 System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
                                 String degreeName = d.getName();
-                                String Orientation = selectedItem.getKey();
-                                orientation = Orientation;                             
+                                String Orientation = selectedItem.getKey();                           
 
                                 TreeItem<String> root = new TreeItem<>(degreeName);
                                 treeView.setRoot(root);
@@ -256,12 +251,22 @@ public class Sisu extends Application {
         //Add a listener to save button
         saveButton.setOnAction((ActionEvent eh) -> {
             messageLabel = new Label();
+            var children = rightSide.getChildren();
+            if(children.size() > 2) {
+                var lastChild = children.get(children.size() - 1);
+                children.remove(lastChild);
+            }
             rightSide.getChildren().add(messageLabel);
             ArrayList<String> completed = new ArrayList<>();
-            getCompletedCourses(root, completed);
             try {
-                saveCompletedCourses(studentNumber, completed);
-                showMessage("Student: " + studentNumber + " Completions Saved", 3000);
+                showMessage("Student " + currentStudent.getStudentNumber() + ", " + currentStudent.getCompletedCourses().size() + " " + "Completions Saved", 2000);
+                //update json file
+                FileProcessor fp = new FileProcessor();
+                try {
+                    fp.writeToFile("studentInfo.json");
+                } catch (Exception ex) {
+                    System.out.println(ex);
+                }
             } catch (Exception ex) {
                 
             }
@@ -273,7 +278,7 @@ public class Sisu extends Application {
             if (item != null) {
                 String value;
                 if(item.getValue().startsWith("*")){
-                    value = item.getValue().substring(1);
+                    value = item.getValue().substring(2 ,item.getValue().length()-2);
                 } else {
                     value = item.getValue();
                 }
@@ -325,8 +330,9 @@ public class Sisu extends Application {
     
     private VBox getRightVBox() {
         //Creating a VBox for the right side.
+
         //set current user's info on the label
-        Student currentStudent = Student.getCurrentStudent();
+        currentStudent = Student.getCurrentStudent();
         Label label = new Label("Username: " + currentStudent.getName() + "\n" +
                             "Student: " + currentStudent.getStudentNumber() + "\n" +
                     "Starting year: " + currentStudent.getStartingYear());
@@ -346,13 +352,7 @@ public class Sisu extends Application {
         
         //Adding an event to the button to terminate the application.
         button.setOnAction((ActionEvent event) -> {
-            //update json file
-            FileProcessor fp = new FileProcessor();
-            try {
-                fp.writeToFile("studentInfo.json");
-            } catch (Exception ex) {
-                System.out.println(ex);
-            }
+            
             Platform.exit();
         });
         
@@ -372,7 +372,7 @@ public class Sisu extends Application {
             
         //then mark completed in gui
         if(item.isLeaf() && !item.getValue().startsWith("*")){
-            item.setValue("*" + item.getValue());
+            item.setValue("**" + item.getValue() + "**");
             
             //don't allow for children
             /*for (TreeItem<String> child : item.getChildren()) {
@@ -386,7 +386,7 @@ public class Sisu extends Application {
     private void removeCompletion(TreeItem<String> item) {
         // Remove the completion from the item
         if(item.getValue().startsWith("*")){
-            item.setValue(item.getValue().substring(1));
+            item.setValue(item.getValue().substring(2 ,item.getValue().length()-2));
             
             Student currentStudent = Student.getCurrentStudent();
             for (var c : currentStudent.getCompletedCourses()) {
@@ -402,33 +402,6 @@ public class Sisu extends Application {
                 removeCompletion(child);
             }*/
         }
-    }
-    
-    private void getCompletedCourses(TreeItem<String> root, ArrayList<String> items) {
-        if(root.getValue().startsWith("*")) {
-            items.add(root.getValue().substring(1));
-        }
-        for (TreeItem<String> child : root.getChildren()) {
-            getCompletedCourses(child, items);
-        }
-    }
-    
-    private void saveCompletedCourses(String studentNumber, ArrayList<String> items) throws Exception {
-        
-        SaveCompletions save = new SaveCompletions();
-        
-         // Read existing data from the file
-        JsonObject existingData = save.readFromFile("courseCompletions.json");
-
-        // Check if studentNumber already exists in the file
-        if (existingData.has(studentNumber)) {
-            // Replace the existing studentNumber and items objects
-            existingData.remove(studentNumber);
-        }
-        existingData.addProperty(studentNumber, new Gson().toJson(items));
-
-        // Write the updated data to the file
-        save.writeToFile("courseCompletions.json", existingData);
     }
     
     // Show a message for a given duration

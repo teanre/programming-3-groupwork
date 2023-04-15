@@ -22,6 +22,7 @@ public class getStudyTree implements iAPI {
     private CourseTree degree;
     private CourseTree currentModule;
     private HashMap<String, ArrayList<String>> coursesOfProgramme = new HashMap<>();
+    private ArrayList<Course> courses = new ArrayList<>();
     
     public getStudyTree(String name) {
         degree = new CourseTree(name);
@@ -98,7 +99,7 @@ public class getStudyTree implements iAPI {
             String programmeName = getNameOfMod(nameObj);
                        
             System.out.println(programmeName);
-            TreeItem<String> currRoot = new TreeItem<String>(programmeName);
+            TreeItem<String> currRoot = new TreeItem<>(programmeName);
             root.getChildren().add(currRoot);
             traverseJson(res, currRoot);
         } catch (JsonSyntaxException e) {
@@ -119,6 +120,23 @@ public class getStudyTree implements iAPI {
         data.add(addPrerequisites(courseObject));
         
         coursesOfProgramme.put(name, data);
+        
+        //create a course object
+        Course c = new Course(
+                name, 
+                courseObject.get("id").getAsString(), 
+                courseObject.get("groupId").getAsString(), 
+                courseObject.getAsJsonObject("credits").get("min").getAsInt()
+        );
+        courses.add(c);
+        
+        Student currentStudent = Student.getCurrentStudent();
+        //if this course is in the completedCourses, make name like so to be presented correctly in treeview
+        for (var compCourse : currentStudent.getCompletedCourses()) {
+            if (c.getGroupId().equals(compCourse.getGroupId())) {
+                name = "**" + name + "**";
+            }
+        }
         
         TreeItem<String> course = new TreeItem<>(name);
         parent.getChildren().add(course);
@@ -212,9 +230,7 @@ public class getStudyTree implements iAPI {
         return finalArray;
     }   
     
-    public void traverseJson(JsonObject json, TreeItem<String> parent) {       
-        ArrayList<String> ids = new ArrayList<>();
-         
+    public void traverseJson(JsonObject json, TreeItem<String> parent) {                
         JsonObject res; 
         String groupId;
         String modName;
@@ -227,17 +243,14 @@ public class getStudyTree implements iAPI {
             System.out.println("course/mod: Vapaasti valittavat kurssit/moduulit");
         } else if (type.equals("CourseUnitRule")) {
             groupId = json.get("courseUnitGroupId").getAsString();
-            ids.add(groupId);
             
             String urlString = createUrlString(groupId, "Course");
                 
             res = getJsonObjectFromApi(urlString);
             processCourseJson(res, parent);
-
         } else { 
             if (type.equals("ModuleRule")) {
                 groupId = json.get("moduleGroupId").getAsString();
-                ids.add(groupId);
 
                 String urlString = createUrlString(groupId, "Module");                
                 res = getJsonObjectFromApi(urlString);
@@ -282,6 +295,10 @@ public class getStudyTree implements iAPI {
     
     public HashMap<String, ArrayList<String>> getCoursesOfProgramme() {
         return this.coursesOfProgramme;
+    }
+    
+    public  ArrayList<Course> getCourses() {
+        return courses;
     }
    
     /**

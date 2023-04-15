@@ -14,6 +14,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.File;
 import java.io.IOException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -49,18 +50,34 @@ public class LoginWindow extends Application {
         
         // Setting login action
         loginBtn.setOnAction((ActionEvent event) -> {
-            // Create a Gson instance
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
             // Getting student information and creating a new student object
             String name = nameField.getText();
             String studentNumber = studentNumberField.getText();
             int startYear = choiceBox.getValue();   
             Student student = new Student(name, studentNumber, startYear);
-            try (FileWriter writer = new FileWriter("studentInfo.json")) {
-                    gson.toJson(student, writer);
-                } catch (IOException e) {
-                    System.out.println(e);
+            Student.setCurrentStudent(student);
+            
+            //open or create new file
+            File file = new File("studentInfo.json");
+            if (file.exists()) { //open the file
+               try {
+                    //check if current users data is in it. if not, add
+                    FileProcessor fileExists = new FileProcessor();
+                    if(!fileExists.isStudentInFile("studentInfo.json", student)) {
+                        //add student to file
+                        fileExists.addStudentToFile("studentInfo.json", student);
+                    } 
+                } catch (Exception ex) {  
+                    System.out.println(ex);
+                }  
+            } else { // create a new file
+                FileProcessor newFile = new FileProcessor();
+                try {
+                    newFile.createNewFile("studentInfo.json");
+                } catch (Exception ex) {
+                    System.out.println(ex);
                 }
+            }
             
             // Open the main window
             Sisu sisu = new Sisu();

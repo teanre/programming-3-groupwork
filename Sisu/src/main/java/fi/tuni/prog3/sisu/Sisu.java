@@ -131,13 +131,12 @@ public class Sisu extends Application {
                     studyTree.returnOrientations(d.getGroupId());     
                     var selected = studyTree.getOrientations();
                     
-                    //create treeView
+                    //create treeView to present course structures
                     TreeView<String> treeView = new TreeView<>(); 
                     
-                    //tässä olis kaks vaihtoehtoo, jos orientations on 0, suoraan treetabi. muute orientaatiot eka
+                    // if the selected degree programme has no orientations, process course structure tab
                     if (selected.isEmpty()) {
                         displayTreeView(d.getGroupId(), d.getName(), treeView);
-
                     } else {
                          // Display orientations by keeping the groupId but displaying only the name
                         ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
@@ -219,6 +218,7 @@ public class Sisu extends Application {
         var req = new getStudyTree(name);
         req.getStudyTreeOf(groupId, root);
         var courses = req.getCoursesOfProgramme();
+        ArrayList<Course> courseObjects = req.getCourses();
                             
         // displaying the treeview in the second tab
         VBox container = new VBox(treeView);
@@ -285,7 +285,7 @@ public class Sisu extends Application {
                             statusButton.setText("Mark Completed");
                             statusButton.setOnAction(evn -> {
                                 // Mark the selected item as completed
-                                markCompleted(((TreeItem<String>)newValue));
+                                markCompleted(((TreeItem<String>)newValue), courseObjects);
                             });
                         } else {
                             // Set the button text for an already completed leaf node
@@ -303,26 +303,19 @@ public class Sisu extends Application {
     
     private VBox getRightVBox() {
         //Creating a VBox for the right side.
-        try (FileReader reader = new FileReader("studentInfo.json")) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            Student info = gson.fromJson(reader, Student.class);
+        //set current user's info on the label
+        Student currentStudent = Student.getCurrentStudent();
+        Label label = new Label("Username: " + currentStudent.getName() + "\n" +
+                            "Student: " + currentStudent.getStudentNumber() + "\n" +
+                    "Starting year: " + currentStudent.getStartingYear());
+        
+        label.setAlignment(Pos.CENTER);
+        label.setPadding(new Insets(10));
             
-            Label label = new Label("Username: " + info.getName() + "\n" +
-                            "Student: " + info.getStudentNumber() + "\n" +
-                    "Starting year: " + info.getStartingYear());
-            
-            label.setAlignment(Pos.CENTER);
-            label.setPadding(new Insets(10));
-            
-            StackPane userInfo = new StackPane(label);
-            rightVBox = new VBox(userInfo);
-            rightVBox.setPrefWidth(280);
-            return rightVBox;
-            
-        } catch (IOException e) {
-            System.out.println(e);
-        }
-        return null;
+        StackPane userInfo = new StackPane(label);
+        rightVBox = new VBox(userInfo);
+        rightVBox.setPrefWidth(280);
+        return rightVBox; 
     }
     
     private Button getQuitButton() {
@@ -331,6 +324,13 @@ public class Sisu extends Application {
         
         //Adding an event to the button to terminate the application.
         button.setOnAction((ActionEvent event) -> {
+            //update json file
+            FileProcessor fp = new FileProcessor();
+            try {
+                fp.writeToFile("studentInfo.json");
+            } catch (Exception ex) {
+                System.out.println(ex);
+            }
             Platform.exit();
         });
         
@@ -339,7 +339,16 @@ public class Sisu extends Application {
     
     // Helper function used in marking completed courses
     // iterates selected items children also
-    private void markCompleted(TreeItem<String> item) {
+    private void markCompleted(TreeItem<String> item, ArrayList<Course> courses) {
+        Student currentStudent = Student.getCurrentStudent();
+        //update completedCourses first
+        for (var c : courses) {
+            if(c.getName().equals(item.getValue())) {
+                currentStudent.addCompletedCourse(c);
+            }                   
+        }
+            
+        //then mark completed in gui
         if(item.isLeaf() && !item.getValue().startsWith("*")){
             item.setValue("*" + item.getValue());
             
@@ -357,6 +366,14 @@ public class Sisu extends Application {
         if(item.getValue().startsWith("*")){
             item.setValue(item.getValue().substring(1));
             
+            Student currentStudent = Student.getCurrentStudent();
+            for (var c : currentStudent.getCompletedCourses()) {
+                if(c.getName().equals(item.getValue())) {
+                    //tallenna studentin completedcoursesiin
+                    System.out.println("matsname loyty");
+                    currentStudent.removeCompletedCourse(c);
+                }                   
+            }
             //ignore children
             // Remove the completion from all children recursively
             /*for (TreeItem<String> child : item.getChildren()) {

@@ -46,6 +46,9 @@ import javafx.stage.Stage;
 public class Sisu extends Application {
     
     private TabPane tabPane;
+    private String degree;
+    private String orientation;
+    private VBox rightVBox;
 
     @Override
     public void start(Stage stage) {
@@ -118,6 +121,7 @@ public class Sisu extends Application {
             }
             
             String chosen = choiceBox.getValue().strip();
+            degree = chosen;
             System.out.println("Selected: " + choiceBox.getValue().strip());
             // find the selected object and call for its degreetree
             for(DegreeModule d : degreeProgrammesData) {
@@ -133,6 +137,7 @@ public class Sisu extends Application {
                     //tässä olis kaks vaihtoehtoo, jos orientations on 0, suoraan treetabi. muute orientaatiot eka
                     if (selected.isEmpty()) {
                         displayTreeView(d.getGroupId(), d.getName(), treeView);
+
                     } else {
                          // Display orientations by keeping the groupId but displaying only the name
                         ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
@@ -156,6 +161,7 @@ public class Sisu extends Application {
                                 System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
                                 String degreeName = d.getName();
                                 String Orientation = selectedItem.getKey();
+                                orientation = Orientation;                             
 
                                 TreeItem<String> root = new TreeItem<>(degreeName);
                                 treeView.setRoot(root);
@@ -209,7 +215,6 @@ public class Sisu extends Application {
         treeView.setRoot(root);
         
         SplitPane splitPane = new SplitPane();
-        splitPane.setDividerPositions(0.3f);
                        
         var req = new getStudyTree(name);
         req.getStudyTreeOf(groupId, root);
@@ -219,19 +224,26 @@ public class Sisu extends Application {
         VBox container = new VBox(treeView);
         Tab secondTab = tabPane.getTabs().get(1);
         secondTab.setContent(splitPane);
-
-        Button statusButton = new Button();
-        statusButton.setText("Mark Completed");
-        container.getChildren().add(statusButton);
         
         // Create a TextArea to display course information
         TextArea courseInfoTextArea = new TextArea();
         container.getChildren().add(courseInfoTextArea);
         courseInfoTextArea.setEditable(false);
         courseInfoTextArea.setWrapText(true);
-        courseInfoTextArea.setMaxWidth(300);
+        courseInfoTextArea.setMinHeight(400);
         
-        splitPane.getItems().addAll(container, courseInfoTextArea);
+        VBox rightSide = new VBox(courseInfoTextArea);
+        rightSide.setPrefWidth(300);
+        container.setPrefWidth(500);
+        
+        Button statusButton = new Button();
+        statusButton.setText("Mark Completed");
+        rightSide.getChildren().add(statusButton);
+        
+        Button saveButton = new Button("Save");
+        container.getChildren().add(saveButton);
+        
+        splitPane.getItems().addAll(container, rightSide);
 
         // Add a listener to the TreeView items
         treeView.setOnMouseMoved(event -> {
@@ -303,7 +315,7 @@ public class Sisu extends Application {
             label.setPadding(new Insets(10));
             
             StackPane userInfo = new StackPane(label);
-            VBox rightVBox = new VBox(userInfo);
+            rightVBox = new VBox(userInfo);
             rightVBox.setPrefWidth(280);
             return rightVBox;
             

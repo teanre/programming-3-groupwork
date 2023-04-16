@@ -1,6 +1,5 @@
 package fi.tuni.prog3.sisu;
 
-import java.io.FileWriter;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -12,21 +11,20 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.File;
-import java.io.IOException;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 
 /**
  * Creates the login window which is first shown to user when she starts the program
- * User can  set name, student number and starting year of studies. When log in
- * action is emitted A new student object is created and passed to main program.
- * Which then opens and login window closes
+ * Sets user data and reads the data from JSON file on login
+ * @author jami
  */
 public class LoginWindow extends Application {
     
+    /*
+    * Setups the login window and event
+    */
     @Override
     public void start(Stage primaryStage) {
         // labels and textfields for user input

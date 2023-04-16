@@ -1,6 +1,5 @@
 
 package fi.tuni.prog3.sisu;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,19 +13,22 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 
+/**
+ * Handles the degree programs structure
+ */
 public class getStudyTree implements iAPI {
     
     private HashMap<String, String> orientations = new HashMap<>();
-    private CourseTree degree;
-    private CourseTree currentModule;
     private HashMap<String, ArrayList<String>> coursesOfProgramme = new HashMap<>();
     private ArrayList<Course> courses = new ArrayList<>();
     
+    /**
+     * Public constructor for launching fetching structure of certain degree
+     * @param name String name of the degree
+     */
     public getStudyTree(String name) {
-        degree = new CourseTree(name);
-        currentModule = degree;
+
     }
     
     /**
@@ -64,7 +66,7 @@ public class getStudyTree implements iAPI {
     }
     
     /**
-     * 
+     * Uses findOrientations to get the orientations of degree program
      * @param modName 
      */
     public void returnOrientations(String modName) {
@@ -87,7 +89,11 @@ public class getStudyTree implements iAPI {
         }  
     }
     
-
+    /**
+     * gets the structure of the study
+     * @param program String selected  degree
+     * @param root TreeItem TreeViews root
+     */
     public void getStudyTreeOf(String program, TreeItem<String> root) {
         try {
             JsonObject res;
@@ -107,6 +113,11 @@ public class getStudyTree implements iAPI {
         }        
     }
     
+    /**
+     * Processes course objects from modules, saves the course data for use
+     * @param courseObject JsonObject includes the course data fetched from API
+     * @param parent TreeItem Module that the course is a children of
+     */
     public void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {       
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
         String name = getNameOfMod(nameObj);
@@ -144,6 +155,11 @@ public class getStudyTree implements iAPI {
         System.out.println("course: " + name + " " /*+ parent.getName()*/);
     }
     
+    /**
+     * saves the data field from JsonObject for later use
+     * @param JsonObject includes the course data fetched from API
+     * @return String text to be displayed
+     */
     private String addPrerequisites(JsonObject courseObject) {
         var Obj = courseObject.get("prerequisites");
         if(!Obj.isJsonObject()){
@@ -156,6 +172,11 @@ public class getStudyTree implements iAPI {
         }
     }
     
+    /**
+     * saves the data field from JsonObject for later use
+     * @param JsonObject includes the course data fetched from API
+     * @return String text to be displayed
+     */
     private String addLearningMaterial(JsonObject courseObject) {
         var Obj = courseObject.get("learningMaterial");
         if(!Obj.isJsonObject()){
@@ -168,6 +189,11 @@ public class getStudyTree implements iAPI {
         }
     }
     
+    /**
+     * saves the data field from JsonObject for later use
+     * @param JsonObject includes the course data fetched from API
+     * @return String text to be displayed
+     */
     private String addContent(JsonObject courseObject) {
         var Obj = courseObject.get("content");
         if(!Obj.isJsonObject()){
@@ -180,6 +206,11 @@ public class getStudyTree implements iAPI {
         }
     }
     
+    /**
+     * saves the data field from JsonObject for later use
+     * @param JsonObject includes the course data fetched from API
+     * @return String text to be displayed
+     */
     private String addOutComes(JsonObject courseObject) {
         var Obj = courseObject.get("outcomes");
         if(!Obj.isJsonObject()){
@@ -192,17 +223,40 @@ public class getStudyTree implements iAPI {
         }
     }
     
+    /**
+     * saves the data field from JsonObject for later use
+     * @param JsonObject includes the course data fetched from API
+     * @return String text to be displayed
+     */
     private String addCredits(JsonObject courseObject) {
-        JsonObject creditsObj = courseObject.get("credits").getAsJsonObject();
-        int minCredits = creditsObj.get("min").getAsInt();
-        int maxCredits = creditsObj.get("max").getAsInt();
-        if(minCredits == maxCredits) {
-            return(minCredits + " Credits");
+        var Obj = courseObject.get("credits");
+        if(!Obj.isJsonObject()){
+            return("- Credits");
         } else {
-            return(minCredits + "-" + maxCredits + " Credits");
+            var creditsObj = Obj.getAsJsonObject();
+            var minCredits = creditsObj.get("min");
+            var maxCredits = creditsObj.get("max");
+            if(minCredits.isJsonNull() && maxCredits.isJsonNull()){
+                return("- Credits");
+            } else if(minCredits.isJsonNull()){
+                return(maxCredits + " Credits");
+            } else if(maxCredits.isJsonNull()){
+                return(minCredits + " Credits");
+            } else {        
+                if(minCredits.getAsInt() == maxCredits.getAsInt()) {
+                    return(minCredits.getAsInt() + " Credits");
+                } else {
+                    return(minCredits.getAsInt() + "-" + maxCredits.getAsInt() + " Credits");
+                }
+            }
         }
     }
-        
+    
+    /**
+     * Processes module fetched from API
+     * @param jsonObject the fetched module data
+     * @return JsonArray the knowledge whether the module has children
+     */
     public JsonArray processJson(JsonObject jsonObject) {
         JsonArray finalArray = null;
 
@@ -230,6 +284,12 @@ public class getStudyTree implements iAPI {
         return finalArray;
     }   
     
+    /**
+     * gets the modules of certain orientation or degree can be then used recursively
+     * to get the sub modules and courses of degrees children
+     * @param json JsonObject the degree or orientation data
+     * @param parent TreeItem parent of which children the traversed module is
+     */
     public void traverseJson(JsonObject json, TreeItem<String> parent) {                
         JsonObject res; 
         String groupId;
@@ -284,19 +344,26 @@ public class getStudyTree implements iAPI {
             }                   
         }       
     }
-    
+    /**
+     * returns the orientations of degree program
+     * @return HashMap orientations
+     */
     public HashMap<String, String> getOrientations() {
         return this.orientations;
     }
     
-    public CourseTree getCourseTree() {
-        return this.degree;
-    }
-    
+    /**
+     * returns the course data of the degree
+     * @return HashMap course data
+     */
     public HashMap<String, ArrayList<String>> getCoursesOfProgramme() {
         return this.coursesOfProgramme;
     }
     
+    /**
+     * returns courses of degree
+     * @return ArrayList courses
+     */
     public  ArrayList<Course> getCourses() {
         return courses;
     }

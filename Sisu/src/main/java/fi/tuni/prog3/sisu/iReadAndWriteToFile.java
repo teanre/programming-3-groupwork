@@ -1,12 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Interface.java to edit this template
- */
 package fi.tuni.prog3.sisu;
-
-import com.google.gson.JsonObject;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 /**
  * Interface with methods to read from a file and write to a file.

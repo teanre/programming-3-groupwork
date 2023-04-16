@@ -18,6 +18,10 @@ public class getDegreeProgrammes {
     // store the necessary degreeprogramme data here
     private ArrayList<DegreeModule> degreeProgrammes = new ArrayList<>();
     
+    /**
+    * Public constructor when called fetches the degree programs from KORI API and
+    * stores them in an array list as degree modules
+    */
     public getDegreeProgrammes() {
 
         try {
@@ -57,7 +61,10 @@ public class getDegreeProgrammes {
             System.out.println("Exception occurred: " + e.getMessage());
         }
     }
-    
+    /**
+     * returns the fetched degrees
+     * @return ArrayList fetched degrees
+     */
     public ArrayList<DegreeModule> getData() {
         return this.degreeProgrammes;
     }

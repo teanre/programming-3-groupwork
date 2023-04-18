@@ -16,6 +16,9 @@ public class Student {
     @SerializedName("startingYear")
     public int startingYear;
     
+    // their degreeprogramme
+    private DegreeProgramme currentProgramme;
+    
     //to keep track of their completed courses
     public ArrayList<Course> completedCourses = new ArrayList<>();
     
@@ -33,7 +36,19 @@ public class Student {
         this.studentNumber = studentNumber;
         this.startingYear = startingYear;
     }
-    
+
+    /**
+     * Sets current degree programme of the student using the application
+     * @param degreeProgramme 
+     */
+    public void setDegreeProgramme(DegreeProgramme degreeProgramme) {
+        this.currentProgramme = degreeProgramme;
+    }
+
+    public DegreeProgramme getDegreeProgramme() {
+        return currentProgramme;
+    }
+
     /**
      * return the students name
      * @return name
@@ -75,7 +90,7 @@ public class Student {
     }
     
     /**
-     * removes course completion of student
+     * Removes course completion of student
      * @param course course to be removed
      */
     public void removeCompletedCourse(Course course) {
@@ -83,7 +98,7 @@ public class Student {
     }
     
     /**
-     * gets the current student using the application
+     * Gets the current student using the application
      * @return current student 
      */
     public static Student getCurrentStudent() {
@@ -91,10 +106,35 @@ public class Student {
     }
     
     /**
-     * sets the user as current student
+     * Sets the user as current student
      * @param student current student
      */
     public static void setCurrentStudent(Student student) {
         currentStudent = student;
+    }
+    
+    /**
+     * Calculates how many ects student has completed altogether.
+     * @return int, the sum of credits
+     */
+    public int getSumOfCompletedCourses(){
+        int sum = 0;
+        for(var c : this.completedCourses) {
+            sum += c.getMinCredits();
+        }
+        return sum;
+    }
+    
+    /**
+     * Calculates percentage of studies completed.
+     * @return double, percentage of studies completed, with accuracy of two decimals
+     */
+    public double calculateProgress(){
+        double denominator = (double) getSumOfCompletedCourses();
+        double divisor = (double) this.getDegreeProgramme().getMinCredits();
+        double result = (denominator /divisor )*100;
+        double roundedResult;
+        return roundedResult  = Math.round(result * 100.0) / 100.0;
+        
     }
 }

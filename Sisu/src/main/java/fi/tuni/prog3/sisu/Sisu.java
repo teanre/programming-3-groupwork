@@ -2,6 +2,7 @@ package fi.tuni.prog3.sisu;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -44,6 +45,7 @@ public class Sisu extends Application {
     private TabPane tabPane;
     private VBox rightVBox;
     private Label messageLabel;
+    private Label progressLabel;
     private Student currentStudent;
 
     @Override
@@ -93,13 +95,26 @@ public class Sisu extends Application {
         
         VBox leftVBox = new VBox();
         
-        var degreeProgrammes = new getDegreeProgrammes();
-        var degreeProgrammesData = degreeProgrammes.getData();
+        //original way 
+        /*var degreeProgrammes = new getDegreeProgrammes();
+        var degreeProgrammesData = degreeProgrammes.getData();*/
+        
+        // test using the new class
+        DegreeProgramme degreeProgramme = new DegreeProgramme();
+        
+        var degreeProgrammesData = degreeProgramme.addDegreeProgrammes();
+        System.out.println(degreeProgrammesData.size());
         
         ChoiceBox<String> choiceBox = new ChoiceBox<>();
         
-        for (DegreeModule degreeProgramme : degreeProgrammesData) {
+        //original way getdegreeprogrammes
+        /*for (DegreeModule degreeProgramme : degreeProgrammesData) {
             choiceBox.getItems().add(degreeProgramme.getName());
+        }*/
+        
+        //new getdegreeprogrammes to add 
+        for (DegreeProgramme programme : degreeProgrammesData) {
+            choiceBox.getItems().add(programme.getName());
         }
         
         Text selectText = new Text("Select your study programme:");
@@ -118,9 +133,16 @@ public class Sisu extends Application {
             
             String chosen = choiceBox.getValue().strip();
             System.out.println("Selected: " + choiceBox.getValue().strip());
+            
+            //original:
             // find the selected object and call for its degreetree
-            for(DegreeModule d : degreeProgrammesData) {
-                if(d.getName().equals(chosen)) {
+            //for(DegreeModule d : degreeProgrammesData) {
+               // if(d.getName().equals(chosen)) {
+                               
+            //!!alternative way with new class
+            for (DegreeProgramme d : degreeProgrammesData) {
+                if (d.getName().equals(chosen)) {
+           
                     //First get the orientations
                     var studyTree = new getStudyTree(d.getName());
                     studyTree.returnOrientations(d.getGroupId());     
@@ -129,9 +151,14 @@ public class Sisu extends Application {
                     //create treeView to present course structures
                     TreeView<String> treeView = new TreeView<>(); 
                     
-                    // if the selected degree programme has no orientations, process course structure tab
+                    //set the current degree programme of user
+                    Student st = Student.getCurrentStudent();
+                    st.setDegreeProgramme(d);
+                    // if the selected degree programme has no orientations, 
+                    // process course structure tab right away
                     if (selected.isEmpty()) {
                         displayTreeView(d.getGroupId(), d.getName(), treeView);
+                        setProgressLabelVisible();
                     } else {
                          // Display orientations by keeping the groupId but displaying only the name
                         ListView<HashMap.Entry<String, String>> orientations = new ListView<>();
@@ -147,19 +174,19 @@ public class Sisu extends Application {
                             }
                         }});
 
-                        //Button for selecting orientationg and launching displaying the studytree
+                        //Button for selecting orientation and launching displaying the studytree
                         Button selectButton = new Button("Select");
                         selectButton.setOnAction(e -> {
                             HashMap.Entry<String, String> selectedItem = orientations.getSelectionModel().getSelectedItem();
                             if (selectedItem != null) {
                                 System.out.println("Selected: " + selectedItem.getKey() + " : " + selectedItem.getValue());
-                                String degreeName = d.getName();
-                                String Orientation = selectedItem.getKey();                           
+                                String degreeName = d.getName();                      
 
                                 TreeItem<String> root = new TreeItem<>(degreeName);
                                 treeView.setRoot(root);
                                 
                                 displayTreeView(selectedItem.getValue(), selectedItem.getKey(), treeView);
+                                setProgressLabelVisible();
                             }
                         });
                     Text selectOrientation = new Text("Select orientation:");
@@ -198,11 +225,15 @@ public class Sisu extends Application {
         leftVBox.getChildren().add(grid);
         leftVBox.setPrefWidth(380);
 
-        return leftVBox;
-        
+        return leftVBox;        
     }
 
-    
+    /**
+     * 
+     * @param groupId
+     * @param name
+     * @param treeView 
+     */
     private void displayTreeView(String groupId, String name, TreeView treeView){
         TreeItem<String> root = new TreeItem<>(name);
         treeView.setRoot(root);
@@ -321,7 +352,6 @@ public class Sisu extends Application {
     
     private VBox getRightVBox() {
         //Creating a VBox for the right side.
-
         //set current user's info on the label
         currentStudent = Student.getCurrentStudent();
         Label label = new Label("Username: " + currentStudent.getName() + "\n" +
@@ -330,9 +360,19 @@ public class Sisu extends Application {
         
         label.setAlignment(Pos.CENTER);
         label.setPadding(new Insets(10));
+        
+        progressLabel = new Label("woooo");
+        progressLabel.setVisible(false);
+        
+        progressLabel.setAlignment(Pos.CENTER);
+        progressLabel.setPadding(new Insets(10));
             
-        StackPane userInfo = new StackPane(label);
-        rightVBox = new VBox(userInfo);
+        //StackPane userInfo = new StackPane(label, progressLabel);
+        rightVBox = new VBox();
+        rightVBox.getChildren().addAll(
+            new StackPane(label),
+            progressLabel
+        );
         rightVBox.setPrefWidth(280);
         return rightVBox; 
     }
@@ -343,7 +383,13 @@ public class Sisu extends Application {
         
         //Adding an event to the button to terminate the application.
         button.setOnAction((ActionEvent event) -> {
-            
+            //save the progress to the file also while quitting to ensure no lost data
+            FileProcessor fp = new FileProcessor();
+            try {
+                    fp.writeToFile("studentInfo.json");
+            } catch (Exception ex) {
+                    System.out.println(ex);
+            }
             Platform.exit();
         });
         
@@ -353,15 +399,15 @@ public class Sisu extends Application {
     // Helper function used in marking completed courses
     // iterates selected items children also
     private void markCompleted(TreeItem<String> item, ArrayList<Course> courses) {
-        Student currentStudent = Student.getCurrentStudent();
-        //update completedCourses first
+        //Student user = Student.getCurrentStudent();
+        //update completedCourses 
         for (var c : courses) {
             if(c.getName().equals(item.getValue())) {
                 currentStudent.addCompletedCourse(c);
             }                   
         }
             
-        //then mark completed in gui
+        // mark completed in gui
         if(item.isLeaf() && !item.getValue().startsWith("*")){
             item.setValue("**" + item.getValue() + "**");
             
@@ -375,16 +421,16 @@ public class Sisu extends Application {
     // Helper function used in demarking completed courses
     // iterates selected items children also
     private void removeCompletion(TreeItem<String> item) {
+        
         // Remove the completion from the item
         if(item.getValue().startsWith("*")){
             item.setValue(item.getValue().substring(2 ,item.getValue().length()-2));
+            Student user = Student.getCurrentStudent();
             
-            Student currentStudent = Student.getCurrentStudent();
-            for (var c : currentStudent.getCompletedCourses()) {
-                if(c.getName().equals(item.getValue())) {
-                    //tallenna studentin completedcoursesiin
-                    System.out.println("matsname loyty");
-                    currentStudent.removeCompletedCourse(c);
+            for (var course : user.getCompletedCourses()) {
+                if(course.getName().equals(item.getValue())) {
+                    // 
+                    user.removeCompletedCourse(course);
                 }                   
             }
             //ignore children
@@ -400,5 +446,16 @@ public class Sisu extends Application {
         messageLabel.setText(message);
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(durationMillis), e -> messageLabel.setText("")));
         timeline.play();
+    }
+    
+    /**
+     * Sets the label visible once needed data is available
+     */
+    private void setProgressLabelVisible() {
+        progressLabel.setText(currentStudent.getDegreeProgramme().getName() + "\n" +
+                                       currentStudent.getSumOfCompletedCourses() + "/" 
+                                        + currentStudent.getDegreeProgramme().getMinCredits() + "\n" 
+                                        + currentStudent.calculateProgress() + "%");
+        progressLabel.setVisible(true);
     }
 }

@@ -2,6 +2,8 @@ package fi.tuni.prog3.sisu;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
+import java.util.Map;
+import javafx.util.Pair;
 
 /**
  * Class to simulate student object
@@ -15,14 +17,13 @@ public class Student {
     public String studentNumber;
     @SerializedName("startingYear")
     public int startingYear;
-    
-    // their degreeprogramme
-    private DegreeProgramme currentProgramme;
-    
-    //to keep track of their completed courses
+    // to keep track of their completed courses. public for gson
     public ArrayList<Course> completedCourses = new ArrayList<>();
     
-    //keeps track of who is using the app right now
+    // the current user's chosen degree programme
+    private static DegreeProgramme currentProgramme;
+
+    // variable to keep track of who is using the app right now
     private static Student currentStudent;
     
     /**
@@ -39,18 +40,22 @@ public class Student {
 
     /**
      * Sets current degree programme of the student using the application
-     * @param degreeProgramme 
+     * @param currentProgramme
      */
-    public void setDegreeProgramme(DegreeProgramme degreeProgramme) {
-        this.currentProgramme = degreeProgramme;
+    public void setDegreeProgramme(DegreeProgramme currentProgramme) {
+        this.currentProgramme = currentProgramme;
     }
-
+    
+    /**
+     * Getter for current user's selected degree programme
+     * @return DegreeProgramme object 
+     */
     public DegreeProgramme getDegreeProgramme() {
         return currentProgramme;
     }
 
     /**
-     * return the students name
+     * Getter the students name
      * @return name
      */
     public String getName() {
@@ -58,7 +63,7 @@ public class Student {
     }
     
     /**
-     * returns the student number
+     * Getter for the student number
      * @return student number
      */
     public String getStudentNumber() {
@@ -66,15 +71,15 @@ public class Student {
     }
     
     /**
-     * returns the starting year of student
-     * @return starting year
+     * Getter for starting year of student
+     * @return int, starting year
      */
     public int getStartingYear() {
         return startingYear;
     }
     
     /**
-     * adds knowledge of completed course for student
+     * adds knowledge of completed course for student to data structure
      * @param course completed course
      */
     public void addCompletedCourse(Course course) {
@@ -82,7 +87,7 @@ public class Student {
     }
     
     /**
-     * returns the completed courses of student
+     * Getter for the completed courses of student
      * @return completed courses
      */
     public ArrayList<Course> getCompletedCourses() {
@@ -98,15 +103,15 @@ public class Student {
     }
     
     /**
-     * Gets the current student using the application
-     * @return current student 
+     * Gets the currently active Student object i.e. the current user
+     * @return current user as Student object
      */
     public static Student getCurrentStudent() {
         return currentStudent;
     }
     
     /**
-     * Sets the user as current student
+     * Sets the Student object as currently active user of programme
      * @param student current student
      */
     public static void setCurrentStudent(Student student) {
@@ -133,8 +138,6 @@ public class Student {
         double denominator = (double) getSumOfCompletedCourses();
         double divisor = (double) this.getDegreeProgramme().getMinCredits();
         double result = (denominator /divisor )*100;
-        double roundedResult;
-        return roundedResult  = Math.round(result * 100.0) / 100.0;
-        
+        return Math.round(result * 100.0) / 100.0;        
     }
 }

@@ -132,7 +132,7 @@ public class Sisu extends Application {
                 if (d.getName().equals(chosen)) {
            
                     // look for orientation options
-                    var studyTree = new getStudyTree(d.getName());
+                    var studyTree = new StudyTree();
                     studyTree.returnOrientations(d.getGroupId());     
                     var orientationMap = studyTree.getOrientations();
                     
@@ -230,9 +230,8 @@ public class Sisu extends Application {
         
         SplitPane splitPane = new SplitPane();
                        
-        var req = new getStudyTree(name);
+        var req = new StudyTree();
         req.getStudyTreeOf(groupId, root);
-        var courses = req.getCoursesOfProgramme();
         ArrayList<Course> courseObjects = req.getCourses();
                             
         // displaying the treeview in the second tab
@@ -297,13 +296,24 @@ public class Sisu extends Application {
                 } else {
                     value = item.getValue();
                 }
-                if(courses.containsKey(value)){
+               /* if(courses.containsKey(value)){
                     ArrayList<String> items = courses.get(value);
                     String content = String.join("\n\n", items);
                     courseInfoTextArea.setText(content);
                 } else {
                     courseInfoTextArea.setText("");
-                }  
+                }  */
+                
+               //test with course obj
+                for (var c : courseObjects) {
+                    if (c.getName().equals(value)) {
+                        String content = c.getCreditRange() + "\n\n" +
+                                c.getContent() + "\n\n" + c.getOutcomes() +
+                                "\n\n" + c.getLearningMaterial() + "\n\n" +
+                                c.getPrerequisites();
+                        courseInfoTextArea.setText(content);
+                    } 
+                }
             } 
         });
 

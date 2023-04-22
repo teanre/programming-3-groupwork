@@ -12,8 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import javafx.scene.control.TreeItem;
 
 /**
@@ -22,11 +20,12 @@ import javafx.scene.control.TreeItem;
 public class StudyTree implements iAPI {
     
     private HashMap<String, String> orientations = new HashMap<>();
-    private HashMap<String, ArrayList<String>> coursesOfProgramme = new HashMap<>();
     private ArrayList<Course> courses = new ArrayList<>();
     
     /**
-     * Public constructor to launch fetching structure of certain degree
+     * Public constructor to launch fetching and presenting the structure
+     * of certain degree programme
+     * 
      */
     public StudyTree() {
 
@@ -46,7 +45,7 @@ public class StudyTree implements iAPI {
             res = getJsonObjectFromApi(urlString);
             
             JsonObject nameObj = res.getAsJsonObject("name");
-            String programmeName = getNameOfMod(nameObj);
+            String programmeName = getNameOfModule(nameObj);
                        
             //System.out.println(programmeName);
             TreeItem<String> currRoot = new TreeItem<>(programmeName);
@@ -64,7 +63,7 @@ public class StudyTree implements iAPI {
      * @param nameObject, JsonObject that has name data
      * @return String, name of the course or module. 
      */
-    private String getNameOfMod(JsonObject nameObject) {
+    private String getNameOfModule(JsonObject nameObject) {
         String name;
         if (nameObject.has("fi")) {
             name = nameObject.get("fi").getAsString();
@@ -73,9 +72,7 @@ public class StudyTree implements iAPI {
         }  
         return name;
     }
-    
-
-    
+  
     /**
      * Fetches orientation options of a degree programme if applicable
      * Uses findOrientations to get the orientations of degree program
@@ -99,8 +96,9 @@ public class StudyTree implements iAPI {
     }
     
         /**
-     * Helper functions for returnOrientations() to get orientation options 
-     * from JsonArray. Stores them in in a HashMap<OrientationName, GroupId>
+     * Helper function for returnOrientations() to get orientation options 
+     * from JsonArray. Stores them in the orientations attribute as
+     * a HashMap<OrientationName, GroupId>
      * @param orientationOptions, a JsonArray including the orientations
      */
     private void findOrientations(JsonArray orientationOptions) {
@@ -112,7 +110,7 @@ public class StudyTree implements iAPI {
             JsonObject res = getJsonObjectFromApi(urlString);
             
             JsonObject nameObj = res.getAsJsonObject("name");
-            String name = getNameOfMod(nameObj);
+            String name = getNameOfModule(nameObj);
             orientations.put(name, groupId);
         }
     }
@@ -127,30 +125,32 @@ public class StudyTree implements iAPI {
      */
     private void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {       
         JsonObject nameObj = courseObject.get("name").getAsJsonObject();
-        String name = getNameOfMod(nameObj);        
+        String name = getNameOfModule(nameObj);        
         
         //create a course object
         Course c = new Course(
                 name, 
                 courseObject.get("id").getAsString(), 
                 courseObject.get("groupId").getAsString(), 
-                courseObject.getAsJsonObject("credits").get("min").getAsInt()
+                courseObject.getAsJsonObject("credits").get("min").getAsInt(),
+                setCreditRange(courseObject),
+                setContent(courseObject),
+                setLearningMaterial(courseObject),
+                setOutcomes(courseObject),
+                setPrerequisites(courseObject)
         );
         courses.add(c);
-        c.setContent(courseObject);       
-        c.setCreditRange(courseObject);
-        c.setLearningMaterial(courseObject);
-        c.setOutcomes(courseObject);
-        c.setPrerequisites(courseObject);
         
         Student currentStudent = Student.getCurrentStudent();
-        //if this course is in the completedCourses, update name to be presented correctly in treeview
+        //if this course is in the completedCourses, update name to be 
+        //presented correctly in treeview
         for (var compCourse : currentStudent.getCompletedCourses()) {
             if (c.getGroupId().equals(compCourse.getGroupId())) {
                 name = "**" + name + "**";
             }
         }
         
+        // add the course to treeview
         TreeItem<String> course = new TreeItem<>(name);
         parent.getChildren().add(course);
         System.out.println("course: " + name + " " /*+ parent.getName()*/);
@@ -220,7 +220,7 @@ public class StudyTree implements iAPI {
                 res = getJsonObjectFromApi(urlString);
                 
                 JsonObject nameObj = res.getAsJsonObject("name");
-                modName = getNameOfMod(nameObj);
+                modName = getNameOfModule(nameObj);
 
                 System.out.println("mod: " + modName + " " /*+ currentModule.getName()*/);
 
@@ -314,5 +314,77 @@ public class StudyTree implements iAPI {
             System.out.println("Exception occurred: " + e.getMessage());
         }
         return null;
+    }
+    
+    
+    private String setCreditRange(JsonObject courseObject) {
+        var Obj = courseObject.get("credits");
+        if(!Obj.isJsonObject()){
+            return "- Credits";
+        } else {
+            var creditsObj = Obj.getAsJsonObject();
+            JsonElement minCreditsOf = creditsObj.get("min");
+            var maxCredits = creditsObj.get("max");
+            if(minCreditsOf.isJsonNull() && maxCredits.isJsonNull()){
+                return "- Credits";
+            } else if(minCreditsOf.isJsonNull()){
+                return maxCredits + " Credits";
+            } else if(maxCredits.isJsonNull()){
+                return minCreditsOf + " Credits";
+            } else {        
+                if(minCreditsOf.getAsInt() == maxCredits.getAsInt()) {
+                    return minCreditsOf.getAsInt() + " Credits";
+                } else {
+                    return minCreditsOf.getAsInt() + "-" + maxCredits.getAsInt() + " Credits";
+                }
+            }
+        }
+    }
+    
+    private String setContent(JsonObject courseObject) {
+        var Obj = courseObject.get("content");
+        if(!Obj.isJsonObject()){
+            return "Content: -";
+        } else {
+            var contentObj = Obj.getAsJsonObject();
+            String data = getNameOfModule(contentObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return "Content: " + text;
+        }
+    }
+    
+    private String setOutcomes(JsonObject courseObject) {
+        var Obj = courseObject.get("outcomes");
+        if(!Obj.isJsonObject()){
+           return "Outcomes: -";
+        } else {
+            var outcomesObj = Obj.getAsJsonObject();
+            String data = getNameOfModule(outcomesObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return "Outcomes: " + text;
+        }
+    }
+    
+    private String setLearningMaterial(JsonObject courseObject) {var Obj = courseObject.get("learningMaterial");
+        if(!Obj.isJsonObject()){
+            return "Learning Material: -";
+        } else {
+            var learningObj = Obj.getAsJsonObject();
+            String data = getNameOfModule(learningObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return "Learning Material: " + text;
+        }
+    }
+    
+    private String setPrerequisites(JsonObject courseObject) {
+        var Obj = courseObject.get("prerequisites");
+        if(!Obj.isJsonObject()){
+            return "Prerequisites: -";
+        } else {
+            var prerequisitesObj = Obj.getAsJsonObject();
+            String data = getNameOfModule(prerequisitesObj);
+            String text = data.replaceAll("\\<.*?\\>", "");
+            return "Prerequisites: " + text;
+        }
     }
 }

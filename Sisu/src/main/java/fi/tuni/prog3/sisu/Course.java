@@ -1,16 +1,19 @@
 
 package fi.tuni.prog3.sisu;
 
+import java.io.Serializable;
+
 /**
  * Simulates course object inherits degree module properties
  * @author terhi
  */
-public class Course extends DegreeModule {
-    private String creditRange;  
-    private String content;
-    private String outcomes;
-    private String learningMaterial;
-    private String prerequisites;
+public class Course extends DegreeModule implements Serializable {
+    // these attributes are not needed in serialization, hence transient
+    private transient String creditRange;  
+    private transient String content;
+    private transient String outcomes;
+    private transient String learningMaterial;
+    private transient String prerequisites;
 
     /**
      * Public constructor that calls the superclass constructor
@@ -53,7 +56,7 @@ public class Course extends DegreeModule {
 
     /**
      * Getter for outcomes
-     * @return STring, outcomes of a course
+     * @return String, outcomes of a course
      */
     public String getOutcomes() {
         return outcomes;

@@ -2,6 +2,7 @@ package fi.tuni.prog3.sisu;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import javafx.animation.KeyFrame;
@@ -132,7 +133,7 @@ public class Sisu extends Application {
            
                     // look for orientation options
                     var studyTree = new StudyTree();
-                    studyTree.returnOrientations(d.getGroupId());     
+                    studyTree.fetchOrientations(d.getGroupId());     
                     var orientationMap = studyTree.getOrientations();
                     
                     // create treeView to present course structures
@@ -415,12 +416,13 @@ public class Sisu extends Application {
         if(item.getValue().startsWith("*")){
             item.setValue(item.getValue().substring(2 ,item.getValue().length()-2));
             Student user = Student.getCurrentStudent();
-
-            for (var course : user.getCompletedCourses()) {
-                if(course.getName().equals(item.getValue())) {
-                    // 
-                    user.removeCompletedCourse(course);
-                }                   
+            
+            Iterator<Course> iterator = user.getCompletedCourses().iterator();
+            while (iterator.hasNext()) {
+                Course course = iterator.next();
+                if (course.getName().equals(item.getValue())) {
+                    iterator.remove();
+                }
             }
         }
     }

@@ -51,19 +51,24 @@ public class LoginWindow extends Application {
             String name = nameField.getText();
             String studentNumber = studentNumberField.getText();
             int startYear = choiceBox.getValue();   
+            
             Student student = new Student(name, studentNumber, startYear);
+            
+            // set the user student object as current student, so it can be
+            // accessed throughout the programme with get
             Student.setCurrentStudent(student);
             
             //open or create new file
             File file = new File("studentInfo.json");
             if (file.exists()) { //open the file
                try {
-                    //check if current users data is in it. if not, add
-                    FileProcessor fileExists = new FileProcessor();
-                    if(!fileExists.isStudentInFile("studentInfo.json", student)) {
-                        //add student to file
-                        fileExists.addStudentToFile("studentInfo.json", student);
-                    } 
+                   //check if current user's data is in it. if not, add
+                   FileProcessor fileExists = new FileProcessor();
+                   // reads the user's data from file
+                   if (!fileExists.readFromFile("studentInfo.json")) {
+                       // new user, add to file
+                       fileExists.addStudentToFile("studentInfo.json", student);
+                   }
                 } catch (Exception ex) {  
                     System.out.println(ex);
                 }  

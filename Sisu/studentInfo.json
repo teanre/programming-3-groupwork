@@ -1,0 +1,41 @@
+{
+  "students": [
+    {
+      "name": "Jami",
+      "studentNumber": "123",
+      "startingYear": 2023,
+      "completedCourses": [
+        {
+          "name": "Orientoivat opinnot ja HOPS",
+          "id": "otm-d88f2366-0745-49dc-8d87-eaddfadc709e",
+          "groupId": "uta-ykoodi-38279",
+          "minCredits": 2
+        },
+        {
+          "name": "Digitaaliset yleistaidot, teema 1: Yliopiston tietotekninen ympäristö",
+          "id": "otm-62a941c8-d9fd-480b-8900-5a19706ee446",
+          "groupId": "otm-62a941c8-d9fd-480b-8900-5a19706ee446",
+          "minCredits": 1
+        },
+        {
+          "name": "Digitaaliset yleistaidot, teema 2: Taulukkomuotoisen tiedon käsittely ja tiedon visualisointi",
+          "id": "otm-c9c7647b-802d-40b4-bec5-e0be0a31fd4d",
+          "groupId": "otm-c9c7647b-802d-40b4-bec5-e0be0a31fd4d",
+          "minCredits": 1
+        },
+        {
+          "name": "Digitaaliset yleistaidot, teema 3: Tekstimuotoisen tiedon käsittely sekä kuvankäsittelyn ja verkossa julkaisemisen periaatteet",
+          "id": "otm-b9fd5077-aaf8-400e-aefc-50bde1474cb6",
+          "groupId": "otm-b9fd5077-aaf8-400e-aefc-50bde1474cb6",
+          "minCredits": 1
+        },
+        {
+          "name": "Digitaaliset yleistaidot, teema 4: Ohjelmoinnin alkeet",
+          "id": "otm-84830244-e2d7-4afb-962c-6d45fd81f2a7",
+          "groupId": "otm-dd6672e1-b437-4ba6-9c8a-9bf780168016",
+          "minCredits": 1
+        }
+      ]
+    }
+  ]
+}

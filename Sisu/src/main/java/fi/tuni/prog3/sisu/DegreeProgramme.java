@@ -32,7 +32,7 @@ public class DegreeProgramme extends DegreeModule implements iAPI {
      * @param groupId String, identifying groupid code of the programme
      * @param minCredits int, minimum credits required for the degree
      */
-    private DegreeProgramme (String name, String id, String groupId, int minCredits) {
+    public DegreeProgramme (String name, String id, String groupId, int minCredits) {
         super(name, id, groupId, minCredits);
     }
     

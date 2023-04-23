@@ -1,4 +1,3 @@
-
 package fi.tuni.prog3.sisu;
 
 import com.google.gson.Gson;
@@ -6,12 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 /**
@@ -21,7 +18,7 @@ import java.util.ArrayList;
 public class FileProcessor implements iReadAndWriteToFile {
     
     /**
-     * Constructor
+     * Constructor to initiate user data handling
      */
     public FileProcessor(){
         
@@ -30,13 +27,12 @@ public class FileProcessor implements iReadAndWriteToFile {
     /**
      * Saves a new users data to json file
      * @param fileName, String, name of the file where the data is stored
-     * @param student, Student object 
-     * @return true if successfull, false otherwise
-     * @throws Exception 
+     * @param student, Student object, user to add to file
+     * @return true if successful, false otherwise
+     * @throws Exception if reading or writing to file is not successful
      */
     public boolean addStudentToFile(String fileName, Student student) throws Exception {
         try (Reader reader = new FileReader(fileName)) {
-            // read the file
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
             // get the students array
@@ -50,20 +46,22 @@ public class FileProcessor implements iReadAndWriteToFile {
             try (FileWriter writer = new FileWriter("studentInfo.json")) {
                 gson.toJson(jsonObject, writer);
             } catch (IOException e) {
-                System.out.println(e);
+                System.out.println("Error writing to file: " + e.getMessage());
+                return false;
             }
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Error reading the file " + e.getMessage());
             return false;
         }
         return true;
     }
     
     /**
-     * Creates a new file to store user data if it does not exist
+     * Creates a new file to store user data if it does not exist. Adds the 
+     * current user to the file
      * @param fileName String, name of source file
      * @return boolean, true if successful, false otherwise
-     * @throws Exception 
+     * @throws Exception if creating a file is not successful
      */
     public boolean createNewFile(String fileName) throws Exception {
         try (FileWriter writer = new FileWriter(fileName)) {
@@ -74,7 +72,7 @@ public class FileProcessor implements iReadAndWriteToFile {
             gson.toJson(new StudentList(students), writer);
             writer.close();
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Creating a file failed: " + e.getMessage());
             return false;
         }
         return true;
@@ -82,9 +80,9 @@ public class FileProcessor implements iReadAndWriteToFile {
     
     /**
      * Updates the userdata json file with current user's info 
-     * @param fileName the source json file's name
+     * @param fileName String, the source json file's name
      * @return true if successful, false if not
-     * @throws Exception 
+     * @throws Exception if reading or writing to file is not successful
      */
     @Override
     public boolean writeToFile(String fileName) throws Exception {
@@ -106,20 +104,22 @@ public class FileProcessor implements iReadAndWriteToFile {
                 
                 // current students data found
                 if (studentNr.equals(currentStudent.getStudentNumber())) {
-                    //get theri compcourseslist json the jsonfile
+                    // set as the studenJson to reprocess the completedCourses field
                     studentJson = studentObject;
                     reader.close();
                     break;
                 }
             }                       
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Writing to file unsuccessfull: " + e.getMessage());
             return false;
         }
         
-        // get current users updated completed courses from the programme
+        // get current users completed courses from the programme
         ArrayList<Course> completed = currentStudent.getCompletedCourses();
+        
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
         JsonArray jsonArray = gson.toJsonTree(completed).getAsJsonArray();
                     
         // replace the completedCourses field in the JSON object with the new JsonArray
@@ -136,7 +136,7 @@ public class FileProcessor implements iReadAndWriteToFile {
         try (FileWriter writer = new FileWriter("studentInfo.json")) {
             gson.toJson(jsonObject, writer);
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Writing to file failed: " + e.getMessage());
             return false;
         }
         return true;
@@ -185,9 +185,10 @@ public class FileProcessor implements iReadAndWriteToFile {
                 }
             }                      
         } catch (IOException e) {
-            System.out.println(e);
+            System.out.println("Reading from file failed: " + e.getMessage());
             return false;
         }
         return true;
     }
+    
 }

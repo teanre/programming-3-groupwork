@@ -69,15 +69,15 @@ public class LoginWindow extends Application {
                        // new user, add to file
                        fileExists.addStudentToFile("studentInfo.json", student);
                    }
-                } catch (Exception ex) {  
-                    System.out.println(ex);
+                } catch (Exception e) {  
+                    System.out.println("Error occurred: " + e.getMessage());
                 }  
             } else { // create a new file
                 FileProcessor newFile = new FileProcessor();
                 try {
                     newFile.createNewFile("studentInfo.json");
-                } catch (Exception ex) {
-                    System.out.println(ex);
+                } catch (Exception e) {
+                    System.out.println("Error occurred: " + e.getMessage());
                 }
             }
             

@@ -1,5 +1,6 @@
 package fi.tuni.prog3.sisu;
 
+import static fi.tuni.prog3.sisu.Constants.FILENAME;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -59,15 +60,15 @@ public class LoginWindow extends Application {
             Student.setCurrentStudent(student);
             
             //open or create new file
-            File file = new File("studentInfo.json");
+            File file = new File(FILENAME);
             if (file.exists()) { //open the file
                try {
                    //check if current user's data is in it. if not, add
                    FileProcessor fileExists = new FileProcessor();
                    // reads the user's data from file
-                   if (!fileExists.readFromFile("studentInfo.json")) {
+                   if (!fileExists.readFromFile(FILENAME)) {
                        // new user, add to file
-                       fileExists.addStudentToFile("studentInfo.json", student);
+                       fileExists.addStudentToFile(FILENAME, student);
                    }
                 } catch (Exception e) {  
                     System.out.println("Error occurred: " + e.getMessage());
@@ -75,7 +76,7 @@ public class LoginWindow extends Application {
             } else { // create a new file
                 FileProcessor newFile = new FileProcessor();
                 try {
-                    newFile.createNewFile("studentInfo.json");
+                    newFile.createNewFile(FILENAME);
                 } catch (Exception e) {
                     System.out.println("Error occurred: " + e.getMessage());
                 }

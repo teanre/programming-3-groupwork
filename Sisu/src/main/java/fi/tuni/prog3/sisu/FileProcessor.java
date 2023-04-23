@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import static fi.tuni.prog3.sisu.Constants.FILENAME;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,7 +44,7 @@ public class FileProcessor implements iReadAndWriteToFile {
             students.add(studentObject);
             
             // write the updated JSON object back to the file
-            try (FileWriter writer = new FileWriter("studentInfo.json")) {
+            try (FileWriter writer = new FileWriter(FILENAME)) {
                 gson.toJson(jsonObject, writer);
             } catch (IOException e) {
                 System.out.println("Error writing to file: " + e.getMessage());
@@ -133,7 +134,7 @@ public class FileProcessor implements iReadAndWriteToFile {
         jsonObject.add("students", studentsArray);
         
         // write the updated JSON object back to the file
-        try (FileWriter writer = new FileWriter("studentInfo.json")) {
+        try (FileWriter writer = new FileWriter(FILENAME)) {
             gson.toJson(jsonObject, writer);
         } catch (IOException e) {
             System.out.println("Writing to file failed: " + e.getMessage());

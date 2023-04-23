@@ -1,5 +1,5 @@
-
 package fi.tuni.prog3.sisu;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,7 +15,9 @@ import java.util.HashMap;
 import javafx.scene.control.TreeItem;
 
 /**
- * Handles the degree programmes structure
+ * Handles the degree programmes structure. Fetchess necessary data from API as
+ * jsonObject, processes it and saves necessary information on orientations 
+ * and courses.
  */
 public class StudyTree implements iAPI {
     
@@ -32,17 +34,49 @@ public class StudyTree implements iAPI {
     }
     
     /**
+     * Returns the orientations of degree program
+     * @return HashMap orientations
+     */
+    public HashMap<String, String> getOrientations() {
+        return this.orientations;
+    }    
+    
+    /**
+     * Returns list of courses of degree programme
+     * @return ArrayList courses
+     */
+    public  ArrayList<Course> getCourses() {
+        return courses;
+    }
+    
+    /**
+     * Fetches orientation options of a degree programme if applicable
+     * Uses findOrientations to get the orientations of degree program
+     * @param moduleGroupId, groupId of the degreeprogrammes module
+     */
+    public void fetchOrientations(String moduleGroupId) {
+        try {                
+            JsonObject res = fetchModule(moduleGroupId);
+            // check if the programme has orientation options, first rule object is decisive
+            JsonObject firstRuleObj = res.getAsJsonObject("rule");
+            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
+                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
+                findOrientations(orientationsArr);
+            }        
+        } catch (JsonSyntaxException e) {
+            System.out.println(e);
+        }  
+    }
+    
+    /**
      * Initiates fetching the course structure of the degree programme. 
      * Delivers needed data for TreeView to present the data in gui.
      * @param programmeGroupId String, selected degreeprogrammes' groupId
      * @param root TreeItem TreeViews root for displaying the info in gui
      */
     public void getStudyTreeOf(String programmeGroupId, TreeItem<String> root) {
-        try {
-            JsonObject res;
-            
-            String urlString = createUrl(programmeGroupId, "Module");               
-            res = getJsonObjectFromApi(urlString);
+        try {            
+            JsonObject res = fetchModule(programmeGroupId);
             
             JsonObject nameObj = res.getAsJsonObject("name");
             String programmeName = getNameOfModule(nameObj);
@@ -57,6 +91,43 @@ public class StudyTree implements iAPI {
         }        
     }
     
+    /**
+     * Retrieves data from API
+     * @param urlString, url of the the source
+     * @return a JsonObject containing required data from API
+     */
+    @Override
+    public JsonObject getJsonObjectFromApi(String urlString) {
+        try {
+        URL url = new URL(urlString);
+        // Set the request
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+
+        // read the request data
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuilder response = new StringBuilder();
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        
+        //return a jsonObject
+        JsonElement jsonElement = JsonParser.parseString(response.toString());
+        if (jsonElement.isJsonObject()) {
+            return jsonElement.getAsJsonObject();
+        } else if (jsonElement.isJsonArray()) {
+            return jsonElement.getAsJsonArray().get(0).getAsJsonObject();
+        }
+
+        } catch (IOException e) {
+            System.out.println("Exception occurred: " + e.getMessage());
+        }
+        return null;
+    }
+    
+
     /** 
      * Used by many methods to fetch the name of a module. Primarily finnish one,
      * is used, if it's not defined in the json the english one
@@ -74,28 +145,6 @@ public class StudyTree implements iAPI {
     }
   
     /**
-     * Fetches orientation options of a degree programme if applicable
-     * Uses findOrientations to get the orientations of degree program
-     * @param modName 
-     */
-    public void returnOrientations(String modName) {
-        try {
-            JsonObject res;
-            String urlString = createUrl(modName, "Module");
-                
-            res = getJsonObjectFromApi(urlString);
-            // check if the programme has orientation options, first rule object is decisive
-            JsonObject firstRuleObj = res.getAsJsonObject("rule");
-            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
-                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
-                findOrientations(orientationsArr);
-            }        
-        } catch (JsonSyntaxException e) {
-            System.out.println(e);
-        }  
-    }
-    
-        /**
      * Helper function for returnOrientations() to get orientation options 
      * from JsonArray. Stores them in the orientations attribute as
      * a HashMap<OrientationName, GroupId>
@@ -104,21 +153,17 @@ public class StudyTree implements iAPI {
     private void findOrientations(JsonArray orientationOptions) {
         for (JsonElement el : orientationOptions) {
             String groupId = el.getAsJsonObject().get("moduleGroupId").getAsString();
-
-            String urlString = createUrl(groupId, "Module");
                 
-            JsonObject res = getJsonObjectFromApi(urlString);
+            JsonObject res = fetchModule(groupId);//getJsonObjectFromApi(urlString);
             
             JsonObject nameObj = res.getAsJsonObject("name");
             String name = getNameOfModule(nameObj);
             orientations.put(name, groupId);
         }
     }
-    
-    
-    
+       
     /**
-     * Processes course objects from modules, saves the course data for use,
+     * Processes course objects from modules, saves the course data for use.
      * Delivers needed data for TreeView to present it in gui.
      * @param courseObject JsonObject includes the course data fetched from API
      * @param parent TreeItem Module that the course is a children of
@@ -157,11 +202,12 @@ public class StudyTree implements iAPI {
     }
         
     /**
-     * Processes module fetched from API
+     * Processes a module's json fetched from API. 
      * @param jsonObject the fetched module data
-     * @return JsonArray the knowledge whether the module has children
+     * @return JsonArray, if it is not empty, means that the module has still
+     * children 
      */
-    public JsonArray processJson(JsonObject jsonObject) {
+    private JsonArray processModuleJson(JsonObject jsonObject) {
         JsonArray finalArray = null;
 
         //if the original obj has rule, then dig deeper in the json
@@ -189,15 +235,14 @@ public class StudyTree implements iAPI {
     }   
     
     /**
-     * Gets the modules of certain orientation or degree can be then used recursively
-     * to get the sub modules and courses of degrees children
-     * @param json JsonObject the degree or orientation data
-     * @param parent TreeItem parent of which children the traversed module is
+     * Helper to recursively go through the course structure of a degree programme/orientation
+     * @param json JsonObject the degree programme/orientation data 
+     * @param parent TreeItem parent of the t
      */
-    public void traverseJson(JsonObject json, TreeItem<String> parent) {                
-        JsonObject res; 
+    private void traverseJson(JsonObject json, TreeItem<String> parent) {                
+        JsonObject data; 
         String groupId;
-        String modName;
+        String moduleName;
         
         String type = json.get("type").getAsString();
         JsonArray jsonArray = null;
@@ -206,35 +251,31 @@ public class StudyTree implements iAPI {
         if (type.equals("AnyCourseUnitRule") || type.equals("AnyModuleRule") ) {
             System.out.println("course/mod: Vapaasti valittavat kurssit/moduulit");
         } else if (type.equals("CourseUnitRule")) {
-            groupId = json.get("courseUnitGroupId").getAsString();
-            
-            String urlString = createUrl(groupId, "Course");
-                
-            res = getJsonObjectFromApi(urlString);
-            processCourseJson(res, parent);
+            groupId = json.get("courseUnitGroupId").getAsString();           
+            data = fetchCourseModule(groupId);
+            processCourseJson(data, parent);
         } else { 
             if (type.equals("ModuleRule")) {
                 groupId = json.get("moduleGroupId").getAsString();
-
-                String urlString = createUrl(groupId, "Module");                
-                res = getJsonObjectFromApi(urlString);
+                data = fetchModule(groupId);
                 
-                JsonObject nameObj = res.getAsJsonObject("name");
-                modName = getNameOfModule(nameObj);
+                JsonObject nameObj = data.getAsJsonObject("name");
+                moduleName = getNameOfModule(nameObj);
 
-                System.out.println("mod: " + modName + " " /*+ currentModule.getName()*/);
+                System.out.println("mod: " + moduleName + " " /*+ currentModule.getName()*/);
 
                 TreeItem<String> oldParent = parent;               
                 //reassign parent
-                parent = new TreeItem<>(modName);
+                parent = new TreeItem<>(moduleName);
                 
                 oldParent.getChildren().add(parent);
-                jsonArray = processJson(res);
+                jsonArray = processModuleJson(data);
             } else {
-                jsonArray = processJson(json);
+                jsonArray = processModuleJson(json);
             }
             
             // note for later: if jsonArray is null, is freely selectable studies
+            // go through every element in the json array until reached the leaves
             if (jsonArray != null) {
                for(JsonElement el : jsonArray) {
                     if (el.isJsonObject()) {
@@ -248,20 +289,25 @@ public class StudyTree implements iAPI {
             }                   
         }       
     }
+
     /**
-     * returns the orientations of degree program
-     * @return HashMap orientations
+     * Fetches a modules data from API
+     * @param moduleGroupId, the groupId of the module
+     * @return the module data as a json object
      */
-    public HashMap<String, String> getOrientations() {
-        return this.orientations;
-    }    
+    private JsonObject fetchModule(String moduleGroupId) {       
+        String urlString = createUrl(moduleGroupId, "Module");               
+        return getJsonObjectFromApi(urlString);
+    }
     
     /**
-     * Returns list of courses of degree programme
-     * @return ArrayList courses
+     * Fetches a course modules data from API
+     * @param courseModuleGroupId, the groupId of the course
+     * @return JsonObject, the course data as a json object
      */
-    public  ArrayList<Course> getCourses() {
-        return courses;
+    private JsonObject fetchCourseModule(String courseModuleGroupId) {       
+        String urlString = createUrl(courseModuleGroupId, "Course");            
+        return getJsonObjectFromApi(urlString);
     }
    
     /**
@@ -273,50 +319,18 @@ public class StudyTree implements iAPI {
     private String createUrl(String groupId, String type){
         String urlString;
         if(type.equals("Module")) {
-            urlString = "https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId=" +groupId+ "&universityId=tuni-university-root-id";
-        } else { //is a course
-            urlString = "https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId="+groupId+"&universityId=tuni-university-root-id";
+            urlString = "https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
+        } else { // otherwise is a course, has different url
+            urlString = "https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
         }
         return urlString;
     }
-    
+
     /**
-     * Retrieves data from API
-     * @param urlString
-     * @return a JsonObject containing necessary data from API
+     * Helper to add creditRange for a Course
+     * @param courseObject, JsonObject containing the course data
+     * @return String, credit range for the course
      */
-    @Override
-    public JsonObject getJsonObjectFromApi(String urlString) {
-        try {
-        URL url = new URL(urlString);
-        // Set the request
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-
-        // read the request data
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-        
-        //return a jsonObject
-        JsonElement jsonElement = JsonParser.parseString(response.toString());
-        if (jsonElement.isJsonObject()) {
-            return jsonElement.getAsJsonObject();
-        } else if (jsonElement.isJsonArray()) {
-            return jsonElement.getAsJsonArray().get(0).getAsJsonObject();
-        }
-
-        } catch (IOException e) {
-            System.out.println("Exception occurred: " + e.getMessage());
-        }
-        return null;
-    }
-    
-    
     private String setCreditRange(JsonObject courseObject) {
         var Obj = courseObject.get("credits");
         if(!Obj.isJsonObject()){
@@ -341,6 +355,11 @@ public class StudyTree implements iAPI {
         }
     }
     
+    /**
+     * Helper to add prerequisites for a Course
+     * @param courseObject, JsonObject containing the course data
+     * @return String, content for the course
+     */
     private String setContent(JsonObject courseObject) {
         var Obj = courseObject.get("content");
         if(!Obj.isJsonObject()){
@@ -353,6 +372,11 @@ public class StudyTree implements iAPI {
         }
     }
     
+    /**
+     * Helper to add prerequisites for a Course
+     * @param courseObject, JsonObject containing the course data
+     * @return String, outcomes for the course
+     */
     private String setOutcomes(JsonObject courseObject) {
         var Obj = courseObject.get("outcomes");
         if(!Obj.isJsonObject()){
@@ -365,6 +389,11 @@ public class StudyTree implements iAPI {
         }
     }
     
+    /**
+     * Helper to add prerequisites for a Course
+     * @param courseObject, JsonObject containing the course data
+     * @return String, learning materials for the course
+     */
     private String setLearningMaterial(JsonObject courseObject) {var Obj = courseObject.get("learningMaterial");
         if(!Obj.isJsonObject()){
             return "Learning Material: -";
@@ -376,6 +405,11 @@ public class StudyTree implements iAPI {
         }
     }
     
+    /**
+     * Helper to add prerequisites for a Course
+     * @param courseObject, JsonObject containing the course data
+     * @return String, prerequisites for the course
+     */
     private String setPrerequisites(JsonObject courseObject) {
         var Obj = courseObject.get("prerequisites");
         if(!Obj.isJsonObject()){
@@ -387,4 +421,5 @@ public class StudyTree implements iAPI {
             return "Prerequisites: " + text;
         }
     }
+       
 }

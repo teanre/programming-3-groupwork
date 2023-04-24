@@ -12,6 +12,9 @@ public class StudentTest {
     
      private final Student student = new Student("Timo Virtanen", "123", 2021);
 
+     /**
+     * Test of methods getName, getStudentNumber, getStartingYear, of class Student.
+     */
     @Test
     public void testGetters() {
         assertEquals("Timo Virtanen", student.getName());
@@ -19,6 +22,9 @@ public class StudentTest {
         assertEquals(2021, student.getStartingYear());
     }
 
+     /**
+     * Test of setDegreeProgramme and getDegreeProgramme methods, of class Student.
+     */
     @Test
     public void testSetAndGetDegreeProgramme() {
         DegreeProgramme degreeProgramme = new DegreeProgramme("Computer Science", "ComSci", "Comp", 180);
@@ -26,6 +32,9 @@ public class StudentTest {
         assertEquals(degreeProgramme, student.getDegreeProgramme());
     }
 
+     /**
+     * Test of methods addCompletedCourse and removeCompletedCourse, of class Student.
+     */
     @Test
     public void testAddAndRemoveCompletedCourse() {
         Course course1 = new Course("Java programming", "Java1", "12345", 5,
@@ -48,12 +57,32 @@ public class StudentTest {
         student.removeCompletedCourse(course1);
         assertFalse(completedCourses.contains(course1));
     }
+    
+     /**
+     * Test of setCurrentStudent method, of class Student.
+     */
+    @Test
+    public void testSetCurrentStudent() {
+        Student student2 = new Student("Alisa Mäkinen", "54321", 2020);
+        Student.setCurrentStudent(student);
+        assertEquals(student, Student.getCurrentStudent());
+        Student.setCurrentStudent(student2);
+        assertEquals(student2, Student.getCurrentStudent());
+    }
 
+
+     /**
+     * Test of getCurrentStudent method, of class Student.
+     */
     @Test
     public void testGetCurrentStudent() {
         Student.setCurrentStudent(student);
         assertEquals(student, Student.getCurrentStudent());
     }
+
+    /**
+     * Test of calculateProgress method, of class Student.
+     */
 
     @Test
     public void testCalculateProgress() {

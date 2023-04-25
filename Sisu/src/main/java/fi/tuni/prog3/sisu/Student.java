@@ -131,13 +131,18 @@ public class Student {
     }
     
     /**
-     * Calculates percentage of studies completed.
+     * Calculates percentage of studies completed by student
      * @return double, percentage of studies completed, with accuracy of two decimals
+     * if the study programme does not have minimum credits set, will return 0.00
      */
     public double calculateProgress(){
         double denominator = (double) getSumOfCompletedCourses();
         double divisor = (double) this.getDegreeProgramme().getMinCredits();
-        double result = (denominator /divisor )*100;
-        return Math.round(result * 100.0) / 100.0;        
+        if (divisor > 0) {
+           double result = (denominator /divisor )*100;
+           return Math.round(result * 100.0) / 100.0;   
+        } else { //if degree programme has no minCredits set/it is 0, can't be used as divisor
+            return 0.00;
+        }             
     }
 }

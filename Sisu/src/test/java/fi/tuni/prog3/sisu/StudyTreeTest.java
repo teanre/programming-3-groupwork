@@ -37,7 +37,6 @@ public class StudyTreeTest {
         
         HashMap<String, String> result = instance.getOrientations();
         assertEquals(expResult, result);
-        
     }
 
     /**
@@ -48,7 +47,6 @@ public class StudyTreeTest {
         StudyTree instance = new StudyTree();
         ArrayList<Course> result = instance.getCourses();
         ArrayList<Course> expResult = new ArrayList<>();
-        
         assertEquals(expResult, result);
     }
 
@@ -57,10 +55,9 @@ public class StudyTreeTest {
      */
     @Test
     public void testFetchOrientations() {
-        String moduleGroupId = "Comp";
+        String moduleGroupId = "";
         StudyTree instance = new StudyTree();
         instance.fetchOrientations(moduleGroupId);
-        
         assertFalse(instance.getOrientations().isEmpty());
     }
 
@@ -75,19 +72,4 @@ public class StudyTreeTest {
         instance.getStudyTreeOf(programmeGroupId, root);
         assertFalse(root.getChildren().isEmpty());
     }
-
-    /**
-     * Test of getJsonObjectFromApi method, of class StudyTree.
-     */
-    @Test
-    public void testGetJsonObjectFromApi() {
-        String urlString = "";
-        StudyTree instance = new StudyTree();
-        JsonObject expResult = null;
-        JsonObject result = instance.getJsonObjectFromApi(urlString);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    
 }

@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package fi.tuni.prog3.sisu;
 
 /**
@@ -28,6 +25,7 @@ public class Constants {
     public static final String TYPE = "type";
     public static final String RULE = "rule";
     public static final String RULES = "rules";
+    public static final String SEARCH_RESULTS ="searchResults";
 
     public static final String ANY_COURSE_UNIT_RULE = "AnyCourseUnitRule";
     public static final String ANY_MODULE_RULE = "AnyModuleRule";

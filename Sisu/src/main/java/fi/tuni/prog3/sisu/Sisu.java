@@ -37,8 +37,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.util.Pair;
-
+import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
  * JavaFX Sisu
@@ -49,7 +48,6 @@ public class Sisu extends Application {
     private VBox rightVBox;
     private Label messageLabel;
     private Label progressLabel;
-   // private Student currentStudent;
 
     @Override
     public void start(Stage stage) {
@@ -277,12 +275,12 @@ public class Sisu extends Application {
                 //update json file
                 FileProcessor fp = new FileProcessor();
                 try {
-                    fp.writeToFile("studentInfo.json");
+                    fp.writeToFile(FILENAME);
                 } catch (Exception ex) {
-                    System.out.println(ex);
+                    System.out.println(EXCEPTION_MSG + ex.getMessage());
                 }
             } catch (Exception ex) {
-                
+                System.out.println(EXCEPTION_MSG + ex.getMessage());
             }
         });
 
@@ -383,7 +381,7 @@ public class Sisu extends Application {
             // save the progress to the file also while quitting to ensure no lost data
             FileProcessor fp = new FileProcessor();
             try {
-                fp.writeToFile("studentInfo.json");
+                fp.writeToFile(FILENAME);
             } catch (Exception ex) {
                 System.out.println(ex);
             }

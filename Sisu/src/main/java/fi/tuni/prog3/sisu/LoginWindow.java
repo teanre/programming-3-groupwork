@@ -1,6 +1,5 @@
 package fi.tuni.prog3.sisu;
 
-import static fi.tuni.prog3.sisu.Constants.FILENAME;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -15,6 +14,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
  * Creates the login window which is first shown to user when she starts the program
@@ -71,14 +71,14 @@ public class LoginWindow extends Application {
                        fileExists.addStudentToFile(FILENAME, student);
                    }
                 } catch (Exception e) {  
-                    System.out.println("Error occurred: " + e.getMessage());
+                    System.out.println(EXCEPTION_MSG + e.getMessage());
                 }  
             } else { // create a new file
                 FileProcessor newFile = new FileProcessor();
                 try {
                     newFile.createNewFile(FILENAME);
                 } catch (Exception e) {
-                    System.out.println("Error occurred: " + e.getMessage());
+                    System.out.println(EXCEPTION_MSG + e.getMessage());
                 }
             }
             

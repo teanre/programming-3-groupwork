@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.ArrayList;
-
+import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
  * Fetches all the degree programmes from the API 
@@ -45,14 +45,14 @@ public class DegreeProgramme extends DegreeModule implements iAPI {
     public ArrayList<DegreeProgramme> addDegreeProgrammes() {
         String urlString = "https://sis-tuni.funidata.fi/kori/api/module-search?curriculumPeriodId=uta-lvv-2021&universityId=tuni-university-root-id&moduleType=DegreeProgramme&limit=1000";
         JsonObject jsonObject = getJsonObjectFromApi(urlString);
-        var searchResults = jsonObject.getAsJsonArray("searchResults");        
+        var searchResults = jsonObject.getAsJsonArray(SEARCH_RESULTS);        
             for (var result : searchResults) {
                 // getting all the necessary fields to create a degreemodule object
                 var obj = result.getAsJsonObject();
-                String idOf = obj.get("id").getAsString();
-                String groupIdOf = obj.get("groupId").getAsString();
-                String nameOf = obj.get("name").getAsString();
-                int minCreditsOf = obj.getAsJsonObject("credits").get("min").getAsInt();
+                String idOf = obj.get(ID).getAsString();
+                String groupIdOf = obj.get(GROUP_ID).getAsString();
+                String nameOf = obj.get(NAME).getAsString();
+                int minCreditsOf = obj.getAsJsonObject(CREDITS).get(MIN).getAsInt();
                 DegreeProgramme degreeProgramme = new DegreeProgramme(nameOf, idOf, groupIdOf, minCreditsOf);      
                 degreeProgrammes.add(degreeProgramme);                
             }
@@ -71,7 +71,7 @@ public class DegreeProgramme extends DegreeModule implements iAPI {
         
         // Set the request
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
+        con.setRequestMethod(REQUEST_METHOD_GET);
 
         // read the request data
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -88,7 +88,7 @@ public class DegreeProgramme extends DegreeModule implements iAPI {
         return jsonObject;
 
         } catch (IOException e) {
-            System.out.println("Exception occurred: " + e.getMessage());
+            System.out.println(EXCEPTION_MSG + e.getMessage());
         }
         return null;
     }

@@ -1,24 +1,19 @@
 package fi.tuni.prog3.sisu;
 
-import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
-import java.util.Map;
-import javafx.util.Pair;
 
 /**
  * Class to simulate student object
  * @author Jami
  */
 public class Student {
-    // SerializedNames to be able to use these in gson directly
-    @SerializedName("name")
-    public String name;
-    @SerializedName("studentNumber")
-    public String studentNumber;
-    @SerializedName("startingYear")
-    public int startingYear;
+    private final String name;
+    private final String studentNumber;
+    private final int startingYear;
+    
     // to keep track of their completed courses. public for gson
-    public ArrayList<Course> completedCourses = new ArrayList<>();
+    private final ArrayList<Course> completedCourses = new ArrayList<>();
     
     // the current user's chosen degree programme
     private static DegreeProgramme currentProgramme;
@@ -79,7 +74,7 @@ public class Student {
     }
     
     /**
-     * adds knowledge of completed course for student to data structure
+     * Adds knowledge of completed course for student to data structure
      * @param course completed course
      */
     public void addCompletedCourse(Course course) {

@@ -148,7 +148,8 @@ public class FileProcessor implements iReadAndWriteToFile {
      * Reads current user's data from the json file and stores necessary info as 
      * Student and Course objects 
      * @param fileName, string, name of source file
-     * @return true if successful, false if not
+     * @return true, if user has been found from file, false if not. returns
+     * false also if there is a problem reading the file
      * @throws Exception 
      */
     @Override
@@ -181,7 +182,7 @@ public class FileProcessor implements iReadAndWriteToFile {
                         for (var c : completedCourses) {
                             user.addCompletedCourse(c);
                         }
-                        break; // no need to iterate array further
+                        return true;// no need to iterate array further, user found                        
                     }
                 }
             }                      
@@ -189,7 +190,8 @@ public class FileProcessor implements iReadAndWriteToFile {
             System.out.println(READ_ERROR + e.getMessage());
             return false;
         }
-        return true;
+        // if the user hasn't been found, return false
+        return false; 
     }
     
 }

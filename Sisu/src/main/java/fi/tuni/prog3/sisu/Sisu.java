@@ -3,8 +3,6 @@ package fi.tuni.prog3.sisu;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -383,7 +381,7 @@ public class Sisu extends Application {
             try {
                 fp.writeToFile(FILENAME);
             } catch (Exception ex) {
-                System.out.println(ex);
+                System.out.println(EXCEPTION_MSG + ex.getMessage());
             }
             Platform.exit();
         });
@@ -403,7 +401,7 @@ public class Sisu extends Application {
             
         // mark completed in gui
         if(item.isLeaf() && !item.getValue().startsWith("*")){
-            item.setValue("**" + item.getValue() + "**");
+            item.setValue(COMPLETED_MARK + item.getValue() + COMPLETED_MARK);
         }
     }
     

@@ -6,10 +6,10 @@ package fi.tuni.prog3.sisu;
  * @author terhi
  */
 public class Constants {
-   // name of the file where user data is stored
-   public static final String FILENAME = "studentInfo.json";
+    // name of the file where user data is stored
+    public static final String FILENAME = "studentInfo.json";
    
-   public static final String REQUEST_METHOD_GET = "GET";
+    public static final String REQUEST_METHOD_GET = "GET";
     
     public static final String READ_ERROR = "Error reading the file: ";
     public static final String WRITE_ERROR = "Error writing to file: ";

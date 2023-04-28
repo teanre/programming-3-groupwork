@@ -35,7 +35,7 @@ public class Student {
 
     /**
      * Sets current degree programme of the student using the application
-     * @param currentProgramme
+     * @param currentProgramme the current programme
      */
     public void setDegreeProgramme(DegreeProgramme currentProgramme) {
         this.currentProgramme = currentProgramme;

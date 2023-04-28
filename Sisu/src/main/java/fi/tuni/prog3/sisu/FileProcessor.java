@@ -150,7 +150,7 @@ public class FileProcessor implements iReadAndWriteToFile {
      * @param fileName, string, name of source file
      * @return true, if user has been found from file, false if not. returns
      * false also if there is a problem reading the file
-     * @throws Exception 
+     * @throws Exception if an error occurs while reading the file
      */
     @Override
     public boolean readFromFile(String fileName) throws Exception {

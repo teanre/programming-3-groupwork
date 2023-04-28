@@ -39,6 +39,9 @@ import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
  * JavaFX Sisu
+ * This class reprsesents the main window of the Sisu application, which includes
+ * a TabPane with two tabs: "My profile" and "Structure of studies". The main window
+ * also includes a "Quit"-button.
  */
 public class Sisu extends Application {
     
@@ -48,8 +51,8 @@ public class Sisu extends Application {
     private Label progressLabel;
 
     /**
-     *
-     * @param stage
+     * Initializes the main window of the application.
+     * @param stage the primary stage for this window
      */
     @Override
     public void start(Stage stage) {
@@ -80,13 +83,18 @@ public class Sisu extends Application {
     }
 
     /**
-     *
-     * @param args
+     * The main method of the application, which launches the JavaFX application.
+     * @param args the command line arguments
      */
     public static void main(String[] args) {
         launch();
     }
     
+    /**
+     * Returns an HBox that contains two VBoxes, one for the left side and one 
+     * for the right side.
+     * @return the HBox containing two VBoxes
+     */ 
     private HBox getCenterHbox() {
         //Creating an HBox.
         HBox centerHBox = new HBox(10);
@@ -97,19 +105,19 @@ public class Sisu extends Application {
         return centerHBox;
     }
     
-    
+    /**
+     * Returns a VBox containing a GridPane with a ChoiceBox for selecting a 
+     * degree program and a button to display its study tree.
+     * @return the VBox containing the GridPane and ChoiceBox
+     */
     private VBox getLeftVBox() {
-        
         VBox leftVBox = new VBox();
        
         // initiate fetching degree programmes
         DegreeProgramme degreeProgramme = new DegreeProgramme();
-        
         var degreeProgrammesData = degreeProgramme.addDegreeProgrammes();
-        
         ChoiceBox<String> choiceBox = new ChoiceBox<>();
 
-        // add degree programmes to choicebox
         for (DegreeProgramme programme : degreeProgrammesData) {
             choiceBox.getItems().add(programme.getName());
         }
@@ -127,11 +135,9 @@ public class Sisu extends Application {
                 var lastChild = children.get(children.size() - 1);
                 children.remove(lastChild);
             }
-            
             String chosen = choiceBox.getValue().strip();
             System.out.println("Selected: " + choiceBox.getValue().strip());
             
-            // iterate through data st
             for (DegreeProgramme d : degreeProgrammesData) {
                 if (d.getName().equals(chosen)) {
            
@@ -223,10 +229,16 @@ public class Sisu extends Application {
     }
 
     /**
+     * Displays a tree view of the courses for the given group ID and name. 
+     * The tree view is displayed in the second tab of the TabPane, along with 
+     * a TextArea to display course information, a button to mark courses 
+     * as completed, and a button to save completed courses. The TreeView and 
+     * TextArea are added to a VBox, which is split into two sections using 
+     * a SplitPane, with the right side showing the current user's information.
      * 
-     * @param groupId
-     * @param name
-     * @param treeView 
+     * @param groupId the ID of the group whose courses are being displayed
+     * @param name the name of the group whose courses are being displayed
+     * @param treeView the TreeView to display the courses in
      */
     private void displayTreeView(String groupId, String name, TreeView treeView){
         TreeItem<String> root = new TreeItem<>(name);
@@ -351,8 +363,13 @@ public class Sisu extends Application {
             }                                      
         });   
     }
-    
-    // Create a VBox for the right side to show current users data.  
+    /**
+     * Returns a VBox containing the current user's information, including their 
+     * username, student number, and starting year, as well as a progress label 
+     * to show their completion progress.
+     * 
+     * @return a VBox containing the current user's information and progress label
+     */
     private VBox getRightVBox() {
         // set current user's info on the label
         Student user = Student.getCurrentStudent();
@@ -378,7 +395,10 @@ public class Sisu extends Application {
         return rightVBox; 
     }
     
-    // Create a button for quitting the application.
+    /**
+     * Creates a button for quitting the application.
+     * @return the quit button
+     */
     private Button getQuitButton() {
         Button button = new Button("Quit");
         
@@ -393,11 +413,14 @@ public class Sisu extends Application {
             }
             Platform.exit();
         });
-        
         return button;
     }
     
-    // Helper function used in marking completed courses
+    /**
+     * Helper function used in marking completed courses.
+     * @param item the TreeItem corresponding to the course that was completed
+     * @param courses the list of all courses in the application
+     */
     private void markCompleted(TreeItem<String> item, ArrayList<Course> courses) {
         Student user = Student.getCurrentStudent();
         //update completedCourses 
@@ -406,14 +429,16 @@ public class Sisu extends Application {
                 user.addCompletedCourse(c);
             }                   
         }
-            
         // mark completed in gui
         if(item.isLeaf() && !item.getValue().startsWith("*")){
             item.setValue(COMPLETED_MARK + item.getValue() + COMPLETED_MARK);
         }
     }
     
-    // Helper function used in demarking completed courses
+    /**
+     * Helper function used in demarking completed courses.
+     * @param item the TreeItem corresponding to the course to remove the completion from
+     */
     private void removeCompletion(TreeItem<String> item) {
         
         // Remove the completion from the item
@@ -431,14 +456,22 @@ public class Sisu extends Application {
         }
     }
     
-    // Show a message for a given duration
+    /**
+     * Shows a message for a given duration.
+     * @param message the message to display
+     * @param durationMillis the duration in milliseconds for which to display the message
+     */
     private void showMessage(String message, int durationMillis) {
         messageLabel.setText(message);
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(durationMillis), e -> messageLabel.setText("")));
         timeline.play();
     }
     
-    // Update progress label 
+    /**
+     * Updates progress label with the student's degree programme name, the number
+     * of completed credits, the minimum credits required for the degree programme,
+     * and the student's progress percentage.
+     */
     private void updateProgressLabel() {
         Student user = Student.getCurrentStudent();
         progressLabel.setText(user.getDegreeProgramme().getName() + "\n" +
@@ -447,5 +480,4 @@ public class Sisu extends Application {
                                         + user.calculateProgress() + "%");
         progressLabel.setVisible(true);
     }
-    
 }

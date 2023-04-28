@@ -22,13 +22,13 @@ import static fi.tuni.prog3.sisu.Constants.*;
  * @author jami
  */
 public class LoginWindow extends Application {
-    
-    /*
-    * Setups the login window and event
-    */
+    /**
+     * Setups the login window and handles login button action.
+     * @param primaryStage the primary stage for this application, onto which the
+     * application can be set.
+     */
     @Override
     public void start(Stage primaryStage) {
-        // labels and textfields for user input
         Label headerLabel = new Label("Give user details");
         headerLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
         Label nameLabel = new Label("Name:");
@@ -81,7 +81,6 @@ public class LoginWindow extends Application {
                     System.out.println(EXCEPTION_MSG + e.getMessage());
                 }
             }
-            
             // Open the main window
             Sisu sisu = new Sisu();
             sisu.start(new Stage());
@@ -90,13 +89,11 @@ public class LoginWindow extends Application {
         });
         
         // Disabling logging in if user haven't given all the details
-        
         BooleanBinding allConditionsMet = Bindings.createBooleanBinding(() -> 
             nameField.getText().trim().isEmpty() ||
             studentNumberField.getText().trim().isEmpty(),
             nameField.textProperty(), studentNumberField.textProperty()
         );
-
         loginBtn.disableProperty().bind(allConditionsMet);
         
         // Setting some basic UI
@@ -122,10 +119,10 @@ public class LoginWindow extends Application {
     }
 
     /**
+     * The main entry point for the JavaFX application.
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         launch(args);
     }
-    
 }

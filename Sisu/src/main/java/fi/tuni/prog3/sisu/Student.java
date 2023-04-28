@@ -4,7 +4,7 @@ package fi.tuni.prog3.sisu;
 import java.util.ArrayList;
 
 /**
- * Class to simulate student object
+ * Class to simulate Student object
  * @author Jami
  */
 public class Student {
@@ -50,7 +50,7 @@ public class Student {
     }
 
     /**
-     * Getter the students name
+     * Getter for the students name
      * @return name
      */
     public String getName() {

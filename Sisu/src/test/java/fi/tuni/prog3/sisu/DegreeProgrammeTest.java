@@ -5,13 +5,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- *
+ * Testfile for the class DegreeProgramme
  * @author jamik
  */
 public class DegreeProgrammeTest {
     
     private DegreeProgramme degreeProgramme = new DegreeProgramme();
 
+    /**
+     * Test of addDegreeProgrammes method, of class DegreeProgramme.
+     */
     @Test
     public void testAddDegreeProgrammes() {
         ArrayList<DegreeProgramme> degreeProgrammes = degreeProgramme.addDegreeProgrammes();
@@ -20,6 +23,9 @@ public class DegreeProgrammeTest {
         assertEquals(273, degreeProgrammes.size());
     }
 
+    /**
+     * Test of the constructor of the class DegreeProgramme.
+     */
     @Test
     public void testConstructor() {
         DegreeProgramme degreeProgramme = new DegreeProgramme("Computer Science", "ComSci", "Comp", 180);

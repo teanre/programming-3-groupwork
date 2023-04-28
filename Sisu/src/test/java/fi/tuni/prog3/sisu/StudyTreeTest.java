@@ -4,26 +4,17 @@
  */
 package fi.tuni.prog3.sisu;
 
-import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javafx.scene.control.TreeItem;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- *
+ * Testfile for the class StudyTree
  * @author annik
  */
 public class StudyTreeTest {
-    
-    public StudyTreeTest() {
-    }
-    
     /**
      * Test of getOrientations method, of class StudyTree.
      */

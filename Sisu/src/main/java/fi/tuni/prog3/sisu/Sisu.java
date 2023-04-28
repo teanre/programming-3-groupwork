@@ -47,6 +47,10 @@ public class Sisu extends Application {
     private Label messageLabel;
     private Label progressLabel;
 
+    /**
+     *
+     * @param stage
+     */
     @Override
     public void start(Stage stage) {
 
@@ -75,6 +79,10 @@ public class Sisu extends Application {
         stage.show();
     }
 
+    /**
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         launch();
     }

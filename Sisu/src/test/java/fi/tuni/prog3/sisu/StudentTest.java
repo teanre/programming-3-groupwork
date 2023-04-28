@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- *
+ * Testfile for the class Student.
+ * 
  * @author jamik
  */
 public class StudentTest {
@@ -83,7 +84,6 @@ public class StudentTest {
     /**
      * Test of calculateProgress method, of class Student.
      */
-
     @Test
     public void testCalculateProgress() {
         DegreeProgramme degreeProgramme = new DegreeProgramme("Computer Science", "ComSci", "Comp", 180);

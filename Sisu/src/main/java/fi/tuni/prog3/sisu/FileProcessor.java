@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
  * Handles the user data of the programme saved in a json file.
@@ -37,7 +38,7 @@ public class FileProcessor implements iReadAndWriteToFile {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
             // get the students array
-            JsonArray students = jsonObject.getAsJsonArray("students");
+            JsonArray students = jsonObject.getAsJsonArray(STUDENTS);
             // create a jsonobject of the student
             JsonObject studentObject = gson.toJsonTree(student).getAsJsonObject();
             // add student to json
@@ -47,11 +48,11 @@ public class FileProcessor implements iReadAndWriteToFile {
             try (FileWriter writer = new FileWriter(FILENAME)) {
                 gson.toJson(jsonObject, writer);
             } catch (IOException e) {
-                System.out.println("Error writing to file: " + e.getMessage());
+                System.out.println(WRITE_ERROR + e.getMessage());
                 return false;
             }
         } catch (IOException e) {
-            System.out.println("Error reading the file " + e.getMessage());
+            System.out.println(READ_ERROR + e.getMessage());
             return false;
         }
         return true;
@@ -73,7 +74,7 @@ public class FileProcessor implements iReadAndWriteToFile {
             gson.toJson(new StudentList(students), writer);
             writer.close();
         } catch (IOException e) {
-            System.out.println("Creating a file failed: " + e.getMessage());
+            System.out.println(FILE_CREATE_ERROR + e.getMessage());
             return false;
         }
         return true;
@@ -96,12 +97,12 @@ public class FileProcessor implements iReadAndWriteToFile {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
             // get the students array
-            studentsArray = jsonObject.getAsJsonArray("students");
+            studentsArray = jsonObject.getAsJsonArray(STUDENTS);
 
             //find the current users data from json to update
             for (JsonElement studentElement : studentsArray) {
                 JsonObject studentObject = studentElement.getAsJsonObject();
-                String studentNr = studentObject.get("studentNumber").getAsString();
+                String studentNr = studentObject.get(STUDENT_NR).getAsString();
                 
                 // current students data found
                 if (studentNr.equals(currentStudent.getStudentNumber())) {
@@ -112,7 +113,7 @@ public class FileProcessor implements iReadAndWriteToFile {
                 }
             }                       
         } catch (IOException e) {
-            System.out.println("Writing to file unsuccessfull: " + e.getMessage());
+            System.out.println(WRITE_ERROR + e.getMessage());
             return false;
         }
         
@@ -125,30 +126,30 @@ public class FileProcessor implements iReadAndWriteToFile {
                     
         // replace the completedCourses field in the JSON object with the new JsonArray
         if (studentJson != null) {
-            studentJson.remove("completedCourses");
-            studentJson.add("completedCourses", jsonArray);
+            studentJson.remove(COMPLETED_COURSES);
+            studentJson.add(COMPLETED_COURSES, jsonArray);
         }
         
         // update the students array in the JSON object with the updated version
         JsonObject jsonObject = new JsonObject();
-        jsonObject.add("students", studentsArray);
+        jsonObject.add(STUDENTS, studentsArray);
         
         // write the updated JSON object back to the file
         try (FileWriter writer = new FileWriter(FILENAME)) {
             gson.toJson(jsonObject, writer);
         } catch (IOException e) {
-            System.out.println("Writing to file failed: " + e.getMessage());
+            System.out.println(WRITE_ERROR + e.getMessage());
             return false;
         }
-        return true;
-    
+        return true;    
     }
 
     /**
      * Reads current user's data from the json file and stores necessary info as 
      * Student and Course objects 
      * @param fileName, string, name of source file
-     * @return true if successful, false if not
+     * @return true, if user has been found from file, false if not. returns
+     * false also if there is a problem reading the file
      * @throws Exception 
      */
     @Override
@@ -158,38 +159,39 @@ public class FileProcessor implements iReadAndWriteToFile {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonObject jsonObject = gson.fromJson(reader, JsonObject.class);
             // get the students array
-            JsonArray studentsArray = jsonObject.getAsJsonArray("students");
+            JsonArray studentsArray = jsonObject.getAsJsonArray(STUDENTS);
             Student user = Student.getCurrentStudent();
             if (studentsArray != null) {
                 for (JsonElement studentElement : studentsArray) {
                     JsonObject studentObject = studentElement.getAsJsonObject();
                    // String name = studentObject.get("name").getAsString();
-                    String studentNumber = studentObject.get("studentNumber").getAsString();
+                    String studentNumber = studentObject.get(STUDENT_NR).getAsString();
                     if (studentNumber.equals(user.getStudentNumber())) { //we have found current user's data
-                        JsonArray coursesArray = studentObject.getAsJsonArray("completedCourses");
+                        JsonArray coursesArray = studentObject.getAsJsonArray(COMPLETED_COURSES);
                         ArrayList<Course> completedCourses = new ArrayList<>();
 
                         for (JsonElement courseElement : coursesArray) {
                             JsonObject courseObject = courseElement.getAsJsonObject();
-                            String courseName = courseObject.get("name").getAsString();
-                            String id  = courseObject.get("id").getAsString();
-                            String groupId = courseObject.get("groupId").getAsString();
-                            int minCredits = courseObject.get("minCredits").getAsInt();
+                            String courseName = courseObject.get(NAME).getAsString();
+                            String id  = courseObject.get(ID).getAsString();
+                            String groupId = courseObject.get(GROUP_ID).getAsString();
+                            int minCredits = courseObject.get(MIN_CREDITS).getAsInt();
                             completedCourses.add(new Course(courseName, id, groupId, minCredits,
                                                 "","","","","")); //the other attributes not necessary for completedcourses data
                         }
                         for (var c : completedCourses) {
                             user.addCompletedCourse(c);
                         }
-                        break; // no need to iterate array further
+                        return true;// no need to iterate array further, user found                        
                     }
                 }
             }                      
         } catch (IOException e) {
-            System.out.println("Reading from file failed: " + e.getMessage());
+            System.out.println(READ_ERROR + e.getMessage());
             return false;
         }
-        return true;
+        // if the user hasn't been found, return false
+        return false; 
     }
     
 }

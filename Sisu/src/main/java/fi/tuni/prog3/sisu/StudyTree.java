@@ -13,21 +13,21 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javafx.scene.control.TreeItem;
+import static fi.tuni.prog3.sisu.Constants.*;
 
 /**
- * Handles the degree programmes structure. Fetchess necessary data from API as
- * jsonObject, processes it and saves necessary information on orientations 
+ * Handles the structure of a degree programme. Fetchess necessary data from API
+ * as jsonObject, processes it and saves necessary information on orientations 
  * and courses.
  */
 public class StudyTree implements iAPI {
     
-    private HashMap<String, String> orientations = new HashMap<>();
-    private ArrayList<Course> courses = new ArrayList<>();
+    private final HashMap<String, String> orientations = new HashMap<>();
+    private final ArrayList<Course> courses = new ArrayList<>();
     
     /**
      * Public constructor to launch fetching and presenting the structure
      * of certain degree programme
-     * 
      */
     public StudyTree() {
 
@@ -58,13 +58,13 @@ public class StudyTree implements iAPI {
         try {                
             JsonObject res = fetchModule(moduleGroupId);
             // check if the programme has orientation options, first rule object is decisive
-            JsonObject firstRuleObj = res.getAsJsonObject("rule");
-            if (firstRuleObj.get("type").getAsString().equals("CompositeRule")) {
-                JsonArray orientationsArr = firstRuleObj.getAsJsonArray("rules");
-                findOrientations(orientationsArr);
+            JsonObject firstRuleObj = res.getAsJsonObject(RULE);
+            if (firstRuleObj.get(TYPE).getAsString().equals(COMPOSITE_RULE)) {
+                JsonArray orientationsArray = firstRuleObj.getAsJsonArray(RULES);
+                findOrientations(orientationsArray);
             }        
         } catch (JsonSyntaxException e) {
-            System.out.println(e);
+            System.out.println(EXCEPTION_MSG + e.getMessage());
         }  
     }
     
@@ -78,7 +78,7 @@ public class StudyTree implements iAPI {
         try {            
             JsonObject res = fetchModule(programmeGroupId);
             
-            JsonObject nameObj = res.getAsJsonObject("name");
+            JsonObject nameObj = res.getAsJsonObject(NAME);
             String programmeName = getNameOfModule(nameObj);
                        
             //System.out.println(programmeName);
@@ -87,7 +87,7 @@ public class StudyTree implements iAPI {
             // start digging deeper in the degree structure
             traverseJson(res, currRoot);
         } catch (JsonSyntaxException e) {
-            System.out.println(e);
+            System.out.println(EXCEPTION_MSG + e.getMessage());
         }        
     }
     
@@ -102,7 +102,7 @@ public class StudyTree implements iAPI {
         URL url = new URL(urlString);
         // Set the request
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
+        con.setRequestMethod(REQUEST_METHOD_GET);
 
         // read the request data
         BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -122,26 +122,24 @@ public class StudyTree implements iAPI {
         }
 
         } catch (IOException e) {
-            System.out.println("Exception occurred: " + e.getMessage());
+            System.out.println(EXCEPTION_MSG + e.getMessage());
         }
         return null;
     }
     
 
     /** 
-     * Used by many methods to fetch the name of a module. Primarily finnish one,
-     * is used, if it's not defined in the json the english one
+     * Used by many methods to fetch the name of a module. Primarily finnish 
+     * version is used, if it's not defined in the json, the english one is returned
      * @param nameObject, JsonObject that has name data
-     * @return String, name of the course or module. 
+     * @return String, name of the course or module
      */
     private String getNameOfModule(JsonObject nameObject) {
-        String name;
-        if (nameObject.has("fi")) {
-            name = nameObject.get("fi").getAsString();
+        if (!nameObject.has(FI)) {
+            return nameObject.get(EN).getAsString();
         } else {
-            name = nameObject.get("en").getAsString();
+            return nameObject.get(FI).getAsString();
         }  
-        return name;
     }
   
     /**
@@ -152,11 +150,11 @@ public class StudyTree implements iAPI {
      */
     private void findOrientations(JsonArray orientationOptions) {
         for (JsonElement el : orientationOptions) {
-            String groupId = el.getAsJsonObject().get("moduleGroupId").getAsString();
+            String groupId = el.getAsJsonObject().get(MODULE_GROUP_ID).getAsString();
                 
-            JsonObject res = fetchModule(groupId);//getJsonObjectFromApi(urlString);
+            JsonObject res = fetchModule(groupId);
             
-            JsonObject nameObj = res.getAsJsonObject("name");
+            JsonObject nameObj = res.getAsJsonObject(NAME);
             String name = getNameOfModule(nameObj);
             orientations.put(name, groupId);
         }
@@ -169,15 +167,15 @@ public class StudyTree implements iAPI {
      * @param parent TreeItem Module that the course is a children of
      */
     private void processCourseJson(JsonObject courseObject, TreeItem<String> parent) {       
-        JsonObject nameObj = courseObject.get("name").getAsJsonObject();
+        JsonObject nameObj = courseObject.get(NAME).getAsJsonObject();
         String name = getNameOfModule(nameObj);        
         
         //create a course object
         Course c = new Course(
                 name, 
-                courseObject.get("id").getAsString(), 
-                courseObject.get("groupId").getAsString(), 
-                courseObject.getAsJsonObject("credits").get("min").getAsInt(),
+                courseObject.get(ID).getAsString(), 
+                courseObject.get(GROUP_ID).getAsString(), 
+                courseObject.getAsJsonObject(CREDITS).get(MIN).getAsInt(),
                 setCreditRange(courseObject),
                 setContent(courseObject),
                 setLearningMaterial(courseObject),
@@ -191,7 +189,7 @@ public class StudyTree implements iAPI {
         //presented correctly in treeview
         for (var compCourse : currentStudent.getCompletedCourses()) {
             if (c.getGroupId().equals(compCourse.getGroupId())) {
-                name = "**" + name + "**";
+                name = COMPLETED_MARK + name + COMPLETED_MARK;
             }
         }
         
@@ -211,24 +209,24 @@ public class StudyTree implements iAPI {
         JsonArray finalArray = null;
 
         //if the original obj has rule, then dig deeper in the json
-        if (jsonObject.has("rule")) {
-            JsonObject ruleObject = jsonObject.get("rule").getAsJsonObject();  
-            if (ruleObject.has("rule")) {    
-                JsonObject innerRule = ruleObject.getAsJsonObject("rule"); 
-                JsonArray ruleArray = innerRule.getAsJsonArray("rules"); 
+        if (jsonObject.has(RULE)) {
+            JsonObject ruleObject = jsonObject.get(RULE).getAsJsonObject();  
+            if (ruleObject.has(RULE)) {    
+                JsonObject innerRule = ruleObject.getAsJsonObject(RULE); 
+                JsonArray ruleArray = innerRule.getAsJsonArray(RULES); 
                 for (JsonElement jsonEl : ruleArray) {
                     JsonObject jsonObj = jsonEl.getAsJsonObject();
-                    if (jsonObj.has("rules")) {
-                         finalArray = jsonObj.getAsJsonArray("rules");                    
+                    if (jsonObj.has(RULES)) {
+                         finalArray = jsonObj.getAsJsonArray(RULES);                    
                     } else {
                         finalArray = ruleArray;
                     }
                 }
             } else {
-                 finalArray = ruleObject.getAsJsonArray("rules");
+                 finalArray = ruleObject.getAsJsonArray(RULES);
             }
         } else {
-            finalArray = jsonObject.getAsJsonArray("rules");
+            finalArray = jsonObject.getAsJsonArray(RULES);
         }
 
         return finalArray;
@@ -244,22 +242,22 @@ public class StudyTree implements iAPI {
         String groupId;
         String moduleName;
         
-        String type = json.get("type").getAsString();
+        String type = json.get(TYPE).getAsString();
         JsonArray jsonArray = null;
         
         //these are optional courses/modules, not implemented yet
-        if (type.equals("AnyCourseUnitRule") || type.equals("AnyModuleRule") ) {
+        if (type.equals(ANY_COURSE_UNIT_RULE) || type.equals(ANY_MODULE_RULE) ) {
             System.out.println("course/mod: Vapaasti valittavat kurssit/moduulit");
-        } else if (type.equals("CourseUnitRule")) {
-            groupId = json.get("courseUnitGroupId").getAsString();           
+        } else if (type.equals(COURSE_UNIT_RULE)) {
+            groupId = json.get(COURSE_UNIT_GROUP_ID).getAsString();           
             data = fetchCourseModule(groupId);
             processCourseJson(data, parent);
         } else { 
-            if (type.equals("ModuleRule")) {
-                groupId = json.get("moduleGroupId").getAsString();
+            if (type.equals(MODULE_RULE)) {
+                groupId = json.get(MODULE_GROUP_ID).getAsString();
                 data = fetchModule(groupId);
                 
-                JsonObject nameObj = data.getAsJsonObject("name");
+                JsonObject nameObj = data.getAsJsonObject(NAME);
                 moduleName = getNameOfModule(nameObj);
 
                 System.out.println("mod: " + moduleName + " " /*+ currentModule.getName()*/);
@@ -281,7 +279,7 @@ public class StudyTree implements iAPI {
                     if (el.isJsonObject()) {
                         JsonObject obj = el.getAsJsonObject();                   
                         //skip AnyModuleRules at this point, they would be optional modules
-                        if (!obj.get("type").getAsString().equals("AnyModuleRule")) {
+                        if (!obj.get(TYPE).getAsString().equals(ANY_MODULE_RULE)) {
                             traverseJson(obj, parent);
                         }
                     }
@@ -296,7 +294,7 @@ public class StudyTree implements iAPI {
      * @return the module data as a json object
      */
     private JsonObject fetchModule(String moduleGroupId) {       
-        String urlString = createUrl(moduleGroupId, "Module");               
+        String urlString = createUrl(moduleGroupId, MODULE);               
         return getJsonObjectFromApi(urlString);
     }
     
@@ -306,7 +304,7 @@ public class StudyTree implements iAPI {
      * @return JsonObject, the course data as a json object
      */
     private JsonObject fetchCourseModule(String courseModuleGroupId) {       
-        String urlString = createUrl(courseModuleGroupId, "Course");            
+        String urlString = createUrl(courseModuleGroupId, COURSE);            
         return getJsonObjectFromApi(urlString);
     }
    
@@ -317,13 +315,11 @@ public class StudyTree implements iAPI {
      * @return String, the correct url
      */
     private String createUrl(String groupId, String type){
-        String urlString;
-        if(type.equals("Module")) {
-            urlString = "https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
+        if(type.equals(MODULE)) {
+            return "https://sis-tuni.funidata.fi/kori/api/modules/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
         } else { // otherwise is a course, has different url
-            urlString = "https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
+            return "https://sis-tuni.funidata.fi/kori/api/course-units/by-group-id?groupId=" + groupId + "&universityId=tuni-university-root-id";
         }
-        return urlString;
     }
 
     /**
@@ -332,13 +328,13 @@ public class StudyTree implements iAPI {
      * @return String, credit range for the course
      */
     private String setCreditRange(JsonObject courseObject) {
-        var Obj = courseObject.get("credits");
+        var Obj = courseObject.get(CREDITS);
         if(!Obj.isJsonObject()){
             return "- Credits";
         } else {
             var creditsObj = Obj.getAsJsonObject();
-            JsonElement minCreditsOf = creditsObj.get("min");
-            var maxCredits = creditsObj.get("max");
+            JsonElement minCreditsOf = creditsObj.get(MIN);
+            var maxCredits = creditsObj.get(MAX);
             if(minCreditsOf.isJsonNull() && maxCredits.isJsonNull()){
                 return "- Credits";
             } else if(minCreditsOf.isJsonNull()){
@@ -420,6 +416,5 @@ public class StudyTree implements iAPI {
             String text = data.replaceAll("\\<.*?\\>", "");
             return "Prerequisites: " + text;
         }
-    }
-       
+    }       
 }

@@ -4,11 +4,12 @@ package fi.tuni.prog3.sisu;
 import java.util.ArrayList;
 
 /**
- * Student registered to the application. Data public for GSON use
+ * List of students registered to the application, required to write
+ * student data to new json file
  * @author terhi
  */
 public class StudentList {
-    public ArrayList<Student> students;
+    private final ArrayList<Student> students;
 
     /**
      * public constructor for students registered

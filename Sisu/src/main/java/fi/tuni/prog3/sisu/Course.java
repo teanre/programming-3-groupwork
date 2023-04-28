@@ -9,11 +9,11 @@ import java.io.Serializable;
  */
 public class Course extends DegreeModule implements Serializable {
     // these attributes are not needed in serialization, hence transient
-    private transient String creditRange;  
-    private transient String content;
-    private transient String outcomes;
-    private transient String learningMaterial;
-    private transient String prerequisites;
+    private final transient String creditRange;  
+    private final transient String content;
+    private final transient String outcomes;
+    private final transient String learningMaterial;
+    private final transient String prerequisites;
 
     /**
      * Public constructor that calls the superclass constructor

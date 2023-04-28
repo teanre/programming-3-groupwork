@@ -21,11 +21,11 @@ public class Course extends DegreeModule implements Serializable {
      * @param id id of the course
      * @param groupId group id of the course
      * @param minCredits credits of the course
-     * @param creditRange
-     * @param content
-     * @param outcomes
-     * @param learningMaterial
-     * @param prerequisites
+     * @param creditRange range of the credits of a course
+     * @param content content of the course
+     * @param outcomes outcomes of the course
+     * @param learningMaterial learning materials of the course
+     * @param prerequisites prerequisites of the course
      */
     public Course(String name, String id, String groupId, int minCredits,
             String creditRange, String content, String outcomes, 

@@ -37,11 +37,10 @@ public class LoginWindow extends Application {
         TextField studentNumberField = new TextField();
         Label startYearLabel = new Label("Choose the starting year of studies:");
         
-        // creating choicebox for user to select starting year
         ChoiceBox<Integer> choiceBox = new ChoiceBox<>();
         choiceBox.getItems().addAll(2023,2022,2021,2020,2019,2018,2017,2016,2015,2014,2013);
-        // Setting default value
-        choiceBox.setValue(2023);
+
+        choiceBox.setValue(2023); // set defaul value
         
         Button loginBtn = new Button();
         loginBtn.setText("Login");
@@ -59,7 +58,7 @@ public class LoginWindow extends Application {
             // accessed throughout the programme with get
             Student.setCurrentStudent(student);
             
-            //open or create new file
+            // open or create new file
             File file = new File(FILENAME);
             if (file.exists()) { //open the file
                try {
@@ -81,10 +80,9 @@ public class LoginWindow extends Application {
                     System.out.println(EXCEPTION_MSG + e.getMessage());
                 }
             }
-            // Open the main window
+            // Open the main window and close login window
             Sisu sisu = new Sisu();
             sisu.start(new Stage());
-            // Close the login window
             primaryStage.close();
         });
         

@@ -100,6 +100,5 @@ public class DegreeProgramme extends DegreeModule implements iAPI {
      */
     private ArrayList<DegreeProgramme> getDegreeProgrammes() {
         return this.degreeProgrammes;
-    }
-    
+    } 
 }

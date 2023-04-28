@@ -27,10 +27,9 @@ public class StudyTree implements iAPI {
     
     /**
      * Public constructor to launch fetching and presenting the structure
-     * of certain degree programme
+     * of certain degree programme.
      */
     public StudyTree() {
-
     }
     
     /**
@@ -51,7 +50,7 @@ public class StudyTree implements iAPI {
     
     /**
      * Fetches orientation options of a degree programme if applicable
-     * Uses findOrientations to get the orientations of degree program
+     * Uses findOrientations to get the orientations of degree program.
      * @param moduleGroupId, groupId of the degreeprogrammes module
      */
     public void fetchOrientations(String moduleGroupId) {
@@ -92,7 +91,7 @@ public class StudyTree implements iAPI {
     }
     
     /**
-     * Retrieves data from API
+     * Retrieves data from API.
      * @param urlString, url of the the source
      * @return a JsonObject containing required data from API
      */
@@ -170,7 +169,6 @@ public class StudyTree implements iAPI {
         JsonObject nameObj = courseObject.get(NAME).getAsJsonObject();
         String name = getNameOfModule(nameObj);        
         
-        //create a course object
         Course c = new Course(
                 name, 
                 courseObject.get(ID).getAsString(), 
@@ -245,7 +243,6 @@ public class StudyTree implements iAPI {
         String type = json.get(TYPE).getAsString();
         JsonArray jsonArray = null;
         
-        //these are optional courses/modules, not implemented yet
         if (type.equals(ANY_COURSE_UNIT_RULE) || type.equals(ANY_MODULE_RULE) ) {
             System.out.println("course/mod: Vapaasti valittavat kurssit/moduulit");
         } else if (type.equals(COURSE_UNIT_RULE)) {
@@ -271,9 +268,7 @@ public class StudyTree implements iAPI {
             } else {
                 jsonArray = processModuleJson(json);
             }
-            
-            // note for later: if jsonArray is null, is freely selectable studies
-            // go through every element in the json array until reached the leaves
+
             if (jsonArray != null) {
                for(JsonElement el : jsonArray) {
                     if (el.isJsonObject()) {

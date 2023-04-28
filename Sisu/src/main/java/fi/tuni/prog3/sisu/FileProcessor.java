@@ -20,14 +20,14 @@ import static fi.tuni.prog3.sisu.Constants.*;
 public class FileProcessor implements iReadAndWriteToFile {
     
     /**
-     * Constructor to initiate user data handling
+     * Constructor to initiate user data handling.
      */
     public FileProcessor(){
         
     }
     
     /**
-     * Saves a new users data to json file
+     * Saves a new users data to json file.
      * @param fileName, String, name of the file where the data is stored
      * @param student, Student object, user to add to file
      * @return true if successful, false otherwise
